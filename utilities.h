@@ -6,14 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
+#include <sys/ioctl.h>
 
 /// Terminal ///
 void handleKeys();
 void enableRawMode();
 void disableRawMode();
 void die(const char* s);
-
+int getWindowSize(int* rows , int* cols);
+/// Output ///
+void refreshScreen();
+void drawRows();
 /// Input ///
 char readKey();
 
