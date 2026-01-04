@@ -20,7 +20,6 @@ void refreshScreen(){
 }
 
 void drawRows(struct string *ab){
-    printf("%d",e.rowsNum);
     for (int y =0;y<e.windowsLength;y++){
         if (y>=e.rowsNum){
             if (y == 0) {

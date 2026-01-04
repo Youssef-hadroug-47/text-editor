@@ -20,7 +20,7 @@
 
 struct string{
     char* b;
-    int len;
+    size_t len;
 };
 struct editorConfig {
     int cx,cy;
@@ -56,7 +56,7 @@ void readFile(char* file);
 
 /// buffer append ///
 void initString(struct string *ab);
-void stringAppend(struct string *ab , const char* c , int len);
+void stringAppend(struct string *ab , const char* c , size_t len);
 void stringFree(struct string *ab);
 
 
