@@ -1,4 +1,5 @@
 #include "utilities.h"
+#include <stdio.h>
 
 
 void refreshScreen(){
@@ -22,14 +23,16 @@ void refreshScreen(){
 void drawRows(struct string *ab){
     for (int y =0;y<e.windowsLength;y++){
         int i= y+e.rowoff;
-        
+        //char number[32] ;
+        //snprintf(number, sizeof(number), "\e[38;5;238m%02d│ \e[0m",i);
+        //stringAppend(ab,number,strlen(number));
         if (i>=e.rowsNum){
             if (i== 0) {
                 char welcome[80];
                 
                 int welcomelen = snprintf(welcome, sizeof(welcome),
                         "Welcome to my text editor !");
-                if (welcomelen > e.windowsLength) welcomelen = e.windowsLength;
+               if (welcomelen > e.windowsLength) welcomelen = e.windowsLength;
                 
                 stringAppend(ab, welcome, welcomelen);
                 

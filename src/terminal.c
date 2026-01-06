@@ -34,18 +34,10 @@ void handleKeys(){
             
             exit(0);
             break;
-        case 'q':
-            if (e.cx) e.cx--;
+        case '$':
+            e.cx= e.rowBuff[e.cy+e.rowoff].len-1;
             break;
-        case 'z':
-            if (e.cy) e.cy --;
-            break;
-        case 's':
-            e.cy ++;
-            break;
-        case 'd':
-            e.cx ++;
-            break;
+
         case 27 :{
             char seq[3] ;
             if(read(STDIN_FILENO,&seq[0],1) == -1){}
@@ -54,11 +46,15 @@ void handleKeys(){
                 case '[':
                     switch (seq[1]){
                         case 'A':
-                            if (e.cy) e.cy--;
+                            if(e.cy < e.rowsNum - e.rowoff +1 && e.cy+e.rowoff != 0 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) e.cx = e.rowBuff[e.cy-1+e.rowoff].len-1;
+                            else e.cx = 0;
+                            if (e.cy) e.cy--; 
                             else if(e.rowoff) e.rowoff--;
                             break;
                         case 'B':
-                            if(e.cy != e.windowsLength -1) e.cy++;
+                            if(e.cy < e.rowsNum - e.rowoff -1 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) e.cx = e.rowBuff[e.cy+1+e.rowoff].len-1;
+                            else e.cx = 0;
+                            if(e.cy != e.windowsLength -1)  e.cy++;
                             else e.rowoff++;
                             break;
                         case 'C':
