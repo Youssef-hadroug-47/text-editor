@@ -20,7 +20,7 @@
 
 struct string{
     char* b;
-    size_t len;
+    int len;
 };
 struct editorConfig {
     int cx,cy;

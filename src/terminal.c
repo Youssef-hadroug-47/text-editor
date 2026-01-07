@@ -37,6 +37,9 @@ void handleKeys(){
         case '$':
             e.cx= e.rowBuff[e.cy+e.rowoff].len-1;
             break;
+        case '0':
+            e.cx= 0;
+            break;
 
         case 27 :{
             char seq[3] ;
@@ -46,24 +49,46 @@ void handleKeys(){
                 case '[':
                     switch (seq[1]){
                         case 'A':
-                            if(e.cy < e.rowsNum - e.rowoff +1 && e.cy+e.rowoff != 0 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) e.cx = e.rowBuff[e.cy-1+e.rowoff].len-1;
+                            if(e.cy+e.rowoff -1 < e.rowsNum  && e.cy+e.rowoff != 0 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) 
+                                e.cx =  e.rowBuff[e.cy-1+e.rowoff].len-1 >= 0 ? 
+                                        e.rowBuff[e.cy-1+e.rowoff].len-1 : 
+                                        0 ;
+
                             else e.cx = 0;
                             if (e.cy) e.cy--; 
                             else if(e.rowoff) e.rowoff--;
                             break;
                         case 'B':
-                            if(e.cy < e.rowsNum - e.rowoff -1 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) e.cx = e.rowBuff[e.cy+1+e.rowoff].len-1;
+                            if(e.cy+e.rowoff+1 < e.rowsNum  && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1){ 
+                                e.cx  = (e.rowBuff[e.cy+1+e.rowoff].len > 0) ? 
+                                        e.rowBuff[e.cy+1+e.rowoff].len-1 :
+                                        0 ;
+                            }
                             else e.cx = 0;
                             if(e.cy != e.windowsLength -1)  e.cy++;
                             else e.rowoff++;
                             break;
                         case 'C':
-                            if(e.cx != e.windowsWidth -1) e.cx++;
+                            if(e.cy+e.rowoff<e.rowsNum  && e.cx == e.rowBuff[e.cy+e.rowoff].len -1) {
+                                if (e.cy != e.windowsLength -1) e.cy++;
+                                else e.rowoff++;
+                                e.cx=0;
+                            }
+                            else if(e.cx != e.windowsWidth -1) e.cx++;
                             else e.coloff++;
                             break;
                         case 'D':
-                            if (e.cx) e.cx--;
-                            else if (e.coloff) e.coloff--;
+                            if (e.cx != 0) e.cx--;
+                            else {
+                                if (e.coloff) e.coloff--;
+                                else if(e.cy+e.rowoff < e.rowsNum && e.cy+e.rowoff != 0){
+                                        if (e.cy) e.cy--;
+                                        else e.rowoff--;
+                                        e.cx =  e.rowBuff[e.cy+e.rowoff].len-1 >= 0 ? 
+                                                e.rowBuff[e.cy+e.rowoff].len-1 : 
+                                                0 ;
+                                }
+                            }
                             break;
                         case '5':
                             if(read(STDIN_FILENO,&seq[2],1) == -1){}
