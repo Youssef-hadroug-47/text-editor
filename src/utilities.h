@@ -61,7 +61,7 @@ void readFile(char* file);
 
 /// buffer append ///
 void initString(struct string *ab);
-void stringAppend(struct string *ab , const char* c , size_t len);
+void stringAppend(struct string *ab , const char* c , int len);
 void stringFree(struct string *ab);
 
 

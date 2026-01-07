@@ -5,7 +5,7 @@ void initString(struct string *ab){
     ab->len = 0;
     ab->b[0]='\0';
 }
-void stringAppend(struct string *ab , const char* c , size_t len){
+void stringAppend(struct string *ab , const char* c , int len){
     ab->b = realloc(ab->b, ab->len + len + 1);
 
     memcpy(ab->b + ab->len , c, len);
