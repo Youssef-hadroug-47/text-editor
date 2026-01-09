@@ -20,8 +20,10 @@ void initEditorConfig(){
     e.coloff=0;
     if (getWindowSize(&e.windowsLength, &e.windowsWidth) == -1)
         die("getWindowSize");
+    e.windowsLength -=2;
     e.rowsNum=0;
     e.rowBuff = NULL;
+    e.filename = NULL;
 }
 
 void handleKeys(){

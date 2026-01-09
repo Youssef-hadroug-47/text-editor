@@ -11,12 +11,47 @@ void refreshScreen(){
     
     drawRows(&ab);
     
+    drawStatusLine(&ab); 
+    
     char ch[100];
     snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1);
     stringAppend(&ab, ch ,strlen(ch));
     
     write(STDOUT_FILENO ,ab.b,ab.len);
     stringFree(&ab);
+}
+
+void drawStatusLine(struct string *ab){
+    const char* color =  "\e[48;5;25m";
+    const char* reset = "\e[0m";
+    
+    char statusLine[100];
+    int len = snprintf(statusLine,sizeof(statusLine),"%.20s - %d lines",
+            e.filename ? e.filename : "[No Name]",
+            e.rowsNum 
+            );
+    char percent[30];
+    int len_percent;
+    
+    if (e.cy == 0 )
+        len_percent = snprintf(percent , sizeof(percent),"TOP");
+    else if (e.cy + e.rowoff >= e.rowsNum -1)
+        len_percent = snprintf(percent , sizeof(percent),"BOT");
+    else
+        len_percent = snprintf(percent , sizeof(percent),"%d",(e.cy+e.rowoff)*100/e.rowsNum);
+
+    char rstatus[80];
+    int rlen = snprintf(rstatus, sizeof(rstatus),"%s%%  %d:%d",percent,e.cy+1,e.cx+1);
+    
+    stringAppend(ab,color,strlen(color));
+
+    stringAppend(ab,statusLine,len);
+    for (int i = len ;i<e.windowsWidth-rlen; i++)
+        stringAppend(ab," ",1);
+    if (e.windowsWidth - rlen > len) stringAppend(ab,rstatus,rlen);
+                                                                                                                                   
+    stringAppend(ab,reset,strlen(reset));
+    stringAppend(ab,"\n\r",2);
 }
 
 void drawRows(struct string *ab){
@@ -53,7 +88,6 @@ void drawRows(struct string *ab){
             if (len > e.windowsWidth) len = e.windowsWidth;
             stringAppend(ab, (e.rowBuff+i)->b+e.coloff  , len);
         }
-        if (y<e.windowsLength -1)
-            stringAppend(ab ,"\r\n" ,2);
+        stringAppend(ab ,"\r\n" ,2);
     }
 }

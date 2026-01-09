@@ -32,6 +32,8 @@ struct editorConfig {
 
     struct termios original_term;
     
+    char* filename;
+
     struct string *rowBuff;
     int rowsNum;
 };
@@ -54,7 +56,7 @@ void initEditorConfig();
 /// Output ///
 void refreshScreen();
 void drawRows(struct string *ab);
-
+void drawStatusLine(struct string *ab);
 /// Input ///
 char readKey();
 void readFile(char* file);

@@ -16,7 +16,17 @@ void readFile(char* file){
     if (file == NULL){
         die("fopen");
     }
-
+    
+    
+    int i = strlen(file);
+    while(i >= 0 && file[i] != '/') i--;
+    if (file[i] == '/') i++;
+    i = (i == -1) ? 0 : i ;
+    
+    e.filename = (char*)malloc(strlen(file)-i+1);
+    memcpy(e.filename, file+i , strlen(file)-i);
+    e.filename[strlen(file)-i]= '\0';
+    
 
     char* line = NULL;
     size_t len = 0 ;
