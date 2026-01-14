@@ -10,9 +10,16 @@ void refreshScreen(){
     stringAppend(&ab, "\x1b[H" ,3);
     
     drawRows(&ab);
-    
-    drawStatusLine(&ab); 
-    
+    drawStatusLine(&ab);
+
+    time_t current_time;
+    time(&current_time);
+    if ((int)current_time - e.messageTime >= e.messageWait ) {
+        stringFree(&e.message);
+        initString(&e.message);
+    }
+    if (e.message.len) drawMessage(&ab,e.message);
+
     char ch[100];
     snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1);
     stringAppend(&ab, ch ,strlen(ch));
@@ -92,4 +99,19 @@ void drawRows(struct string *ab){
         }
         stringAppend(ab ,"\r\n" ,2);
     }
+}
+void drawMessage(struct string *ab, struct string message){
+    const char* color = "\e[38;5;214m";
+    const char* reset = "\e[0m";
+    stringAppend(ab, color, strlen(color));
+    stringAppend(ab, message.b, message.len);
+    stringAppend(ab, reset, strlen(reset));
+}
+void writeMessage(struct string *destination , char* message , int len){
+    stringFree(&e.message);
+    initString(&e.message);
+    stringAppend(&e.message ,message ,len);
+    time_t current_time;
+    time(&current_time);
+    e.messageTime = (int)current_time ;
 }

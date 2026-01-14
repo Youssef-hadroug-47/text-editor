@@ -1,5 +1,4 @@
 #include "utilities.h"
-#include <stdlib.h>
 
 
 void insertChar(char c){
@@ -11,21 +10,20 @@ void insertChar(char c){
     }
 
     struct string* current_row = e.rowBuff+e.cy+e.rowoff;
-    int current_col = e.cx;
+    int current_col = e.cx+e.coloff;
     
     if(current_col < current_row ->len){
         current_row->b = realloc(current_row->b , current_row->len + 2);
-        memmove(current_row->b+current_col+1 ,current_row->b+current_col ,current_row->len-current_col);
+        memmove(current_row->b+current_col+1 ,current_row->b+current_col ,current_row->len-current_col+1);
         current_row->b[current_col]=c;
         current_row->len++;
-        current_row->b[current_row->len]='\0';
     }
-    if (current_col >= current_row->len || !current_row){
+    else{
         char buf[1000];
         int i = 0;
-        while (i <  current_col-current_row->len) memcpy(buf+i++, " " ,1);
-        memcpy(buf+i,&c,1);
-        stringAppend(current_row,buf,strlen(buf));
+        while (i <  current_col-current_row->len) buf[i++]= ' ';
+        buf[i] = c;
+        stringAppend(current_row,buf,i+1);
     }
 
     e.modification_num++;
@@ -33,8 +31,9 @@ void insertChar(char c){
 
 int removeChar(){
     struct string* current_row = e.rowBuff+e.cy+e.rowoff;
-    if (e.cy+e.rowoff < e.rowsNum && e.cx+e.coloff != 0){
-        memmove(current_row->b+e.cx+e.coloff-1 ,current_row->b+e.coloff+e.cx ,current_row->len - e.cx);
+    int current_col = e.cx + e.coloff;
+    if (e.cy+e.rowoff < e.rowsNum && current_col != 0){
+        memmove(current_row->b+current_col-1 ,current_row->b+current_col ,current_row->len - current_col);
         current_row->len --;
         current_row->b[current_row->len]='\0';
         e.modification_num++;
@@ -45,6 +44,7 @@ int removeChar(){
 
 void insertNewLine(){
     int current_row = e.rowoff+e.cy;
+    int current_col = e.coloff+e.cx;
 
     // treat current_row out of file file length 
     if (current_row >= e.rowsNum ){ 
@@ -66,10 +66,10 @@ void insertNewLine(){
     e.rowsNum++;
     
     // add tail to next new line
-    int nextLineLen = (e.rowBuff[current_row].len-e.cx >= 0 ) ? (e.rowBuff[current_row].len-e.cx) : 0 ; 
+    int nextLineLen = (e.rowBuff[current_row].len-current_col >= 0 ) ? (e.rowBuff[current_row].len-current_col) : 0 ; 
     e.rowBuff[current_row+1].b = (char*)malloc( sizeof(char) * (nextLineLen+1) );
     if(nextLineLen) 
-        memcpy(e.rowBuff[current_row+1].b ,e.rowBuff[current_row].b+e.cx ,nextLineLen);
+        memcpy(e.rowBuff[current_row+1].b ,e.rowBuff[current_row].b+current_col ,nextLineLen);
     if(nextLineLen) 
         e.rowBuff[current_row+1].b[nextLineLen] = '\0'; 
     e.rowBuff[current_row+1].len = nextLineLen;

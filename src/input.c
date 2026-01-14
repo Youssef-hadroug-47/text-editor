@@ -41,7 +41,6 @@ void readFile(char* file){
         initString(e.rowBuff + e.rowsNum);
         stringAppend(e.rowBuff + e.rowsNum, line, linesize);
             
-        
         e.rowsNum++;
     }
     free(line);

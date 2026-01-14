@@ -1,6 +1,9 @@
 #include "utilities.h"
+#include <stdio.h>
 
+#define QUIT_ATTEMPTS 2 
 #define CTRL_KEY(k) ((k)-'a'+1)
+
 int getWindowSize(int *rows, int *cols){
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
@@ -25,42 +28,56 @@ void initEditorConfig(){
 
     e.filename = NULL;
     e.filePath = NULL;
+   
+    e.quit_attempts = 0;
+
+    initString(&e.message);
+    char message[]= "This text editor does not support UTF-8! UTF-8 characters may look broken !";
+    writeMessage(&e.message, message,strlen(message));
+    e.messageWait = 5;
 }
 void handleKeys(){
     char c = readKey();
-    
+    if (c != CTRL_KEY('q')) e.quit_attempts = 0;
+
     switch (c){
-        case CTRL_KEY('q'):
+        case QUIT:
+            if (e.quit_attempts == 0 && e.modification_num){
+                char pop_up[] = "Warning ! File has unsaved changes. ";
+                writeMessage(&e.message, pop_up, strlen(pop_up));
+                e.quit_attempts ++ ;
+                break;
+            }
+
             write(STDOUT_FILENO ,"\x1b[2J" ,4);
             write(STDOUT_FILENO , "\x1b[H" ,3);
             
             exit(0);
+        case DOLLAR_SIGN:
+            dollarSign(); 
             break;
-        case '$':
-            e.cx= e.rowBuff[e.cy+e.rowoff].len-1;
-            break;
-        case '0':
+        case ZERO:
             e.cx= 0;
-            break;
-        case CTRL_KEY('s'):
-            saveToDisk();
-            break;
-        case 13:
-            insertNewLine();
-            if (e.cy != e.windowsLength-1) e.cy++;
-            else e.rowoff++;
-            e.cx=0;
             e.coloff=0;
             break;
-        // Backspace
-        case 127:
-            if (!removeChar()) break;
-            if(e.cx)e.cx--;
-            else e.coloff--;
+        case SAVE:{
+            char message[100];
+            snprintf(message,sizeof(message),
+                    (e.modification_num) ? "%d modifications written to disk !" : "%d modification written to disk !"
+                    ,e.modification_num
+            );
+            writeMessage(&e.message, message, strlen(message));
+            saveToDisk();
+            break;
+        }
+        case ENTER:
+            enter();
+            break;
+        case BACKSPACE:
+            backspace(); 
             break;
         
-        // Escape
-        case 27 :{
+        case ESCAPE :{
             char seq[3] ;
             if(read(STDIN_FILENO,&seq[0],1) == -1){}
             if(read(STDIN_FILENO,&seq[1],1) == -1){}
@@ -68,43 +85,16 @@ void handleKeys(){
                 case '[':
                     switch (seq[1]){
                         case 'A':
-                            if(e.cy+e.rowoff -1 < e.rowsNum  && e.cy+e.rowoff != 0 && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1) 
-                                e.cx =  e.rowBuff[e.cy-1+e.rowoff].len-1 >= 0 ? 
-                                        e.rowBuff[e.cy-1+e.rowoff].len-1 : 
-                                        0 ;
-                            else e.cx = 0;
-                            if (e.cy) e.cy--; 
-                            else if(e.rowoff) e.rowoff--;
+                            upArrow();
                             break;
                         case 'B':
-                            if(e.cy+e.rowoff+1 < e.rowsNum  && e.cx >= e.rowBuff[e.cy+e.rowoff].len-1){ 
-                                e.cx  = (e.rowBuff[e.cy+1+e.rowoff].len > 0) ? 
-                                        e.rowBuff[e.cy+1+e.rowoff].len-1 :
-                                        0 ;
-                            }
-                            else e.cx = 0;
-                            if(e.cy != e.windowsLength -1)  e.cy++;
-                            else e.rowoff++;
+                            downArrow(); 
                             break;
                         case 'C':
-                            if(e.cy+e.rowoff<e.rowsNum  && e.cx == e.rowBuff[e.cy+e.rowoff].len) {
-                                if (e.cy != e.windowsLength -1) e.cy++;
-                                else e.rowoff++;
-                                e.cx=0;
-                            }
-                            else if(e.cx != e.windowsWidth -1) e.cx++;
-                            else e.coloff++;
+                            rightArrow();
                             break;
                         case 'D':
-                            if (e.cx != 0) e.cx--;
-                            else {
-                                if (e.coloff) e.coloff--;
-                                else if(e.cy+e.rowoff < e.rowsNum && e.cy+e.rowoff != 0){
-                                        if (e.cy) e.cy--;
-                                        else e.rowoff--;
-                                        e.cx =  e.rowBuff[e.cy+e.rowoff].len; 
-                                }
-                            }
+                            leftArrow();     
                             break;
                         case '5':
                             if(read(STDIN_FILENO,&seq[2],1) == -1){}
@@ -118,11 +108,7 @@ void handleKeys(){
             }
         }
         default :
-            if (!iscntrl(c)){
-                insertChar(c);
-                if (e.cx != e.windowsWidth-1) e.cx++;
-                else e.coloff++;
-            }
+           character(c); 
     }
 }
 void die(const char* s){

@@ -15,9 +15,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <stddef.h>
-
+#include <time.h> 
 /// structures ///
 
+#define CTRL_KEY(k) ((k)-'a'+1)
 struct string{
     char* b;
     int len;
@@ -39,12 +40,25 @@ struct editorConfig {
 
     struct string *rowBuff;
     int rowsNum;
+
+    struct string message;
+    int messageTime ;
+    int messageWait ;
+
+    int quit_attempts;
 };
 enum editorKey{
     LEFT_ARROW, 
     RIGHT_ARROW,
     UP_ARROW,
-    BOTTOM_ARROW
+    BOTTOM_ARROW,
+    DOLLAR_SIGN = '$',
+    ZERO = '0',
+    BACKSPACE = 127,
+    ENTER = 13,
+    QUIT = CTRL_KEY('q'),
+    SAVE = CTRL_KEY('s'),
+    ESCAPE = 27
 };
 extern struct editorConfig e;
 
@@ -60,6 +74,8 @@ void exiting();
 void refreshScreen();
 void drawRows(struct string *ab);
 void drawStatusLine(struct string *ab);
+void drawMessage(struct string *ab , struct string message);
+void writeMessage(struct string *destination , char* message , int len);
 /// Input ///
 char readKey();
 void readFile(char* file);
@@ -74,4 +90,14 @@ void insertChar(char c);
 int removeChar();
 void saveToDisk();
 void insertNewLine();
+
+/// KeyBinding ///
+void leftArrow();
+void rightArrow();
+void upArrow();
+void downArrow();
+void backspace();
+void enter();
+void character(char c);
+void dollarSign();
 #endif
