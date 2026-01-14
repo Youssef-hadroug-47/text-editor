@@ -55,7 +55,7 @@ void disableRawMode();
 void die(const char* s);
 int getWindowSize(int* rows , int* cols);
 void initEditorConfig();
-void existing();
+void exiting();
 /// Output ///
 void refreshScreen();
 void drawRows(struct string *ab);

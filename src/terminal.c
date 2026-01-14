@@ -45,7 +45,13 @@ void handleKeys(){
         case CTRL_KEY('s'):
             saveToDisk();
             break;
-
+        case 13:
+            insertNewLine();
+            if (e.cy != e.windowsLength-1) e.cy++;
+            else e.rowoff++;
+            e.cx=0;
+            e.coloff=0;
+            break;
         // Backspace
         case 127:
             if (!removeChar()) break;
@@ -117,10 +123,6 @@ void handleKeys(){
                 if (e.cx != e.windowsWidth-1) e.cx++;
                 else e.coloff++;
             }
-            else if (c == 10){
-                //insertNewLine();
-            }
-
     }
 }
 void die(const char* s){
@@ -129,7 +131,7 @@ void die(const char* s){
     perror(s);
     exit(1);
 }
-void existing(){
+void exiting(){
     if (e.rowBuff != NULL){
         for (int i = 0 ; i<e.rowsNum ; i++){
             stringFree(&e.rowBuff[i]); 

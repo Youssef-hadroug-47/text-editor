@@ -4,7 +4,7 @@ struct editorConfig e;
 
 int main (int argc ,char* argv[]){
     
-    atexit(existing);
+    atexit(exiting);
 
     if (argc > 2)
         die("Invalid argument !");

@@ -1,4 +1,5 @@
 #include "utilities.h"
+#include <stdlib.h>
 
 
 void insertChar(char c){
@@ -42,12 +43,47 @@ int removeChar(){
     return 0;
 }
 
-//void insertNewLine(){
-    //e.rowBuff = (struct string*)realloc(e.rowBuff , sizeof(struct string) * (e.rowsNum+1) );
-    //memmove(e.rowBuff+e.cy+e.rowoff+2,e.rowBuff+e.cy+e.rowoff+1,e.rowsNum-1-e.cy-e.rowoff);
-    //stringAppend(e.rowBuff+e.cy+e.rowoff+1,e.rowBuff[e.cy+e.rowoff].b+e.cx,e.rowBuff[e.cy+e.rowoff].len-e.cx);
-//
-//}
+void insertNewLine(){
+    int current_row = e.rowoff+e.cy;
+
+    // treat current_row out of file file length 
+    if (current_row >= e.rowsNum ){ 
+        e.rowBuff = (struct string*)realloc(e.rowBuff , sizeof(struct string) * (current_row + 2));
+        for (int i = e.rowsNum ; i<current_row+2 ;i++)
+            initString(&e.rowBuff[i]);
+        e.rowsNum = current_row+2;
+
+        e.modification_num++;
+        return;
+    }
+    
+    // Allocate memory to a new line
+    e.rowBuff = (struct string*)realloc(e.rowBuff , sizeof(struct string) * (e.rowsNum+1) );
+    memmove(e.rowBuff+current_row+2 ,
+            e.rowBuff+current_row+1 ,
+            sizeof(struct string) * (e.rowsNum-1-current_row)
+    );
+    e.rowsNum++;
+    
+    // add tail to next new line
+    int nextLineLen = (e.rowBuff[current_row].len-e.cx >= 0 ) ? (e.rowBuff[current_row].len-e.cx) : 0 ; 
+    e.rowBuff[current_row+1].b = (char*)malloc( sizeof(char) * (nextLineLen+1) );
+    if(nextLineLen) 
+        memcpy(e.rowBuff[current_row+1].b ,e.rowBuff[current_row].b+e.cx ,nextLineLen);
+    if(nextLineLen) 
+        e.rowBuff[current_row+1].b[nextLineLen] = '\0'; 
+    e.rowBuff[current_row+1].len = nextLineLen;
+    
+    // rewrite current line
+    int currentLineLen = e.rowBuff[current_row].len - nextLineLen; 
+    char * temp = e.rowBuff[current_row].b;
+    e.rowBuff[current_row].b = (char*)realloc(e.rowBuff[current_row].b , sizeof(char) * (currentLineLen+1));
+    if(currentLineLen) memcpy(e.rowBuff[current_row].b ,temp ,currentLineLen);
+    e.rowBuff[current_row].len = currentLineLen;
+    if(currentLineLen) e.rowBuff[current_row].b[currentLineLen] = '\0';
+
+    e.modification_num++;
+}
 
 void saveToDisk (){
     FILE* file = fopen(e.filePath,"w");
