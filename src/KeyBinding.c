@@ -41,9 +41,18 @@ void leftArrow(){
     }
 }
 void backspace(){
+    int prev_len;
+    prev_len = (e.cy+e.rowoff == 0) ? 0 : e.rowBuff[e.cy+e.rowoff-1].len; 
+    
     if (!removeChar()) return;
+    
     if(e.cx)e.cx--;
-    else e.coloff--;
+    else if(e.coloff) e.coloff--;
+    else {
+        e.cx = prev_len ; 
+        if(e.cy) e.cy--;
+        else if (e.rowoff) e.rowoff--;
+    }
 }
 void enter(){
     insertNewLine();

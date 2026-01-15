@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #define QUIT_ATTEMPTS 2 
-#define CTRL_KEY(k) ((k)-'a'+1)
+
 
 int getWindowSize(int *rows, int *cols){
     struct winsize ws;

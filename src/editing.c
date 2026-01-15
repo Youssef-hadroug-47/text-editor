@@ -30,15 +30,38 @@ void insertChar(char c){
 }
 
 int removeChar(){
-    struct string* current_row = e.rowBuff+e.cy+e.rowoff;
     int current_col = e.cx + e.coloff;
-    if (e.cy+e.rowoff < e.rowsNum && current_col != 0){
-        memmove(current_row->b+current_col-1 ,current_row->b+current_col ,current_row->len - current_col);
+    struct string* current_row = e.rowBuff+e.cy+e.rowoff;
+
+    if ( current_col >0 && e.cy+e.rowoff < e.rowsNum ){
+        
+        memcpy(current_row->b+current_col-1 ,current_row->b+current_col ,current_row->len - current_col);
         current_row->len --;
-        current_row->b[current_row->len]='\0';
+        current_row->b[current_row->len] = '\0'; 
+
         e.modification_num++;
         return 1;
     }
+    else if (current_col == 0 && e.cy+e.rowoff < e.rowsNum ){
+
+        if (e.cy+e.rowoff != 0){
+            if(current_row->len != 0) stringAppend(current_row-1 ,current_row->b, current_row->len);
+
+            if(e.cy+e.rowoff < e.rowsNum-1) {
+                memmove(current_row,
+                        current_row+1,
+                        sizeof(struct string)*(e.rowsNum - (e.cy+e.rowoff+1) )
+                );
+            }
+        }
+        
+        free(e.rowBuff[e.rowsNum-1].b);
+        e.rowsNum--;
+
+        e.modification_num++;
+        return 1;
+    }
+
     return 0;
 }
 
@@ -68,10 +91,10 @@ void insertNewLine(){
     // add tail to next new line
     int nextLineLen = (e.rowBuff[current_row].len-current_col >= 0 ) ? (e.rowBuff[current_row].len-current_col) : 0 ; 
     e.rowBuff[current_row+1].b = (char*)malloc( sizeof(char) * (nextLineLen+1) );
-    if(nextLineLen) 
+    if(nextLineLen){ 
         memcpy(e.rowBuff[current_row+1].b ,e.rowBuff[current_row].b+current_col ,nextLineLen);
-    if(nextLineLen) 
-        e.rowBuff[current_row+1].b[nextLineLen] = '\0'; 
+        e.rowBuff[current_row+1].b[nextLineLen] = '\0';
+    }
     e.rowBuff[current_row+1].len = nextLineLen;
     
     // rewrite current line
