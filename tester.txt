@@ -1,3 +1,0 @@
-...
-start of line
-string append worked free worked[2]
