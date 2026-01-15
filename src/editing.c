@@ -1,6 +1,11 @@
 #include "utilities.h"
 
-
+void insertCharInRow(struct string *row, int at ,char c){
+        row->b = realloc(row->b , row->len + 2);
+        memmove(row->b+at+1 ,row->b+at ,row->len-at+1);
+        row->b[at]=c;
+        row->len++;
+}
 void insertChar(char c){
     if (e.cy+e.rowoff >= e.rowsNum ){ 
         e.rowBuff = (struct string*)realloc(e.rowBuff , sizeof(struct string) * (e.cy+e.rowoff + 1));
@@ -13,10 +18,7 @@ void insertChar(char c){
     int current_col = e.cx+e.coloff;
     
     if(current_col < current_row ->len){
-        current_row->b = realloc(current_row->b , current_row->len + 2);
-        memmove(current_row->b+current_col+1 ,current_row->b+current_col ,current_row->len-current_col+1);
-        current_row->b[current_col]=c;
-        current_row->len++;
+        insertCharInRow(current_row, current_col, c);
     }
     else{
         char buf[1000];
@@ -28,6 +30,11 @@ void insertChar(char c){
 
     e.modification_num++;
 }
+void removeCharInRow(struct string* row , int at){
+        memcpy(row->b+at-1 ,row->b+at ,row->len - at);
+        row->len --;
+        row->b[row->len] = '\0';
+}
 
 int removeChar(){
     int current_col = e.cx + e.coloff;
@@ -35,9 +42,7 @@ int removeChar(){
 
     if ( current_col >0 && e.cy+e.rowoff < e.rowsNum ){
         
-        memcpy(current_row->b+current_col-1 ,current_row->b+current_col ,current_row->len - current_col);
-        current_row->len --;
-        current_row->b[current_row->len] = '\0'; 
+        removeCharInRow(current_row, current_col);
 
         e.modification_num++;
         return 1;
@@ -109,7 +114,7 @@ void insertNewLine(){
 }
 
 void saveToDisk (){
-    FILE* file = fopen(e.filePath,"w");
+    FILE* file = fopen(e.filePath,"w+");
     if (file == NULL) die("fopen") ;
     
     for (int i =0 ;i<e.rowsNum ;i++){

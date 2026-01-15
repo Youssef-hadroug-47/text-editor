@@ -44,14 +44,14 @@ struct editorConfig {
     struct string message;
     int messageTime ;
     int messageWait ;
-
+    FILE* tester;
     int quit_attempts;
 };
 enum editorKey{
-    LEFT_ARROW, 
-    RIGHT_ARROW,
-    UP_ARROW,
-    BOTTOM_ARROW,
+    LEFT_ARROW = 'D', 
+    RIGHT_ARROW = 'C',
+    UP_ARROW = 'A',
+    DOWN_ARROW = 'B',
     DOLLAR_SIGN = '$',
     ZERO = '0',
     BACKSPACE = 127,
@@ -70,14 +70,17 @@ void die(const char* s);
 int getWindowSize(int* rows , int* cols);
 void initEditorConfig();
 void exiting();
+struct string editorPrompt(char* prompt);
 /// Output ///
 void refreshScreen();
 void drawRows(struct string *ab);
 void drawStatusLine(struct string *ab);
 void drawMessage(struct string *ab , struct string message);
 void writeMessage(struct string *destination , char* message , int len);
+void freeMessage();
 /// Input ///
 char readKey();
+void pathToFileName(char* path);
 void readFile(char* file);
 
 /// buffer append ///
@@ -86,7 +89,9 @@ void stringAppend(struct string *ab , const char* c , int len);
 void stringFree(struct string *ab);
 
 /// editing ////
+void insertCharInRow(struct string* ab ,int at ,char c);
 void insertChar(char c);
+void removeCharInRow(struct string* ab,int at);
 int removeChar();
 void saveToDisk();
 void insertNewLine();

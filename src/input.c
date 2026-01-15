@@ -9,23 +9,27 @@ char readKey(){
     }
     return c;
 }
-
+void pathToFileName(char* path){
+    int i = strlen(path);
+    while(i >= 0 && path[i] != '/') i--;
+    if (path[i] == '/') i++;
+    i = (i == -1) ? 0 : i ;
+    
+    e.filename = (char*)malloc(strlen(path)-i+1);
+    memcpy(e.filename, path+i , strlen(path)-i);
+    e.filename[strlen(path)-i]= '\0';
+}
 void readFile(char* file){
     FILE* File = fopen(file,"r");
     if (File == NULL){
         die("fopen");
     }
     
-    e.filePath = file;  
-    e.modification_num = 0; 
-    int i = strlen(file);
-    while(i >= 0 && file[i] != '/') i--;
-    if (file[i] == '/') i++;
-    i = (i == -1) ? 0 : i ;
+    e.filePath = malloc(strlen(file)+1);
+    memcpy(e.filePath,file,strlen(file));
     
-    e.filename = (char*)malloc(strlen(file)-i+1);
-    memcpy(e.filename, file+i , strlen(file)-i);
-    e.filename[strlen(file)-i]= '\0';
+    e.modification_num = 0;
+    pathToFileName(file);
     
 
     char* line = NULL;

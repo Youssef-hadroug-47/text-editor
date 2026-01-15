@@ -14,10 +14,9 @@ void refreshScreen(){
 
     time_t current_time;
     time(&current_time);
-    if ((int)current_time - e.messageTime >= e.messageWait ) {
-        stringFree(&e.message);
-        initString(&e.message);
-    }
+    if ((int)current_time - e.messageTime >= e.messageWait ) 
+        freeMessage();
+
     if (e.message.len) drawMessage(&ab,e.message);
 
     char ch[100];
@@ -77,7 +76,7 @@ void drawRows(struct string *ab){
                         "Welcome to my text editor !");
                 if (welcomelen > e.windowsLength) welcomelen = e.windowsLength;
                 int padding = (e.windowsWidth-welcomelen)/2;
-                stringAppend(ab, "~" , 1);
+                stringAppend(ab, "⮚" , 4);
                 if (padding)padding --;
                 while(padding){
                     stringAppend(ab, " " , 1);
@@ -88,7 +87,7 @@ void drawRows(struct string *ab){
                 
             } 
             else {
-              stringAppend(ab, "~", 1);
+              stringAppend(ab, "⮚", 4);
             }
         }
         else {
@@ -108,10 +107,17 @@ void drawMessage(struct string *ab, struct string message){
     stringAppend(ab, reset, strlen(reset));
 }
 void writeMessage(struct string *destination , char* message , int len){
-    stringFree(&e.message);
-    initString(&e.message);
-    stringAppend(&e.message ,message ,len);
+    if (destination->b == NULL) destination->b = malloc(len+1);
+    else destination->b = realloc (destination->b,len+1);
+    memcpy(destination->b ,message , len+1);
+    destination->len = len;
+   
     time_t current_time;
     time(&current_time);
     e.messageTime = (int)current_time ;
+}
+void freeMessage(){
+    free(e.message.b);
+    e.message.b = NULL;
+    e.message.len = 0;
 }
