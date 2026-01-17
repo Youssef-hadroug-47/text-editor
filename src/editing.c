@@ -47,8 +47,9 @@ int removeChar(){
         e.modification_num++;
         return 1;
     }
-    else if (current_col == 0 && e.cy+e.rowoff < e.rowsNum && e.cy+e.rowoff != 0){
+    else if (current_col == 0 && e.cy+e.rowoff < e.rowsNum ){
 
+        if (e.cy+e.rowoff){
             if(current_row->len != 0) stringAppend(current_row-1 ,current_row->b, current_row->len);
             if(e.cy+e.rowoff < e.rowsNum-1) {
                 free(current_row->b);
@@ -56,9 +57,10 @@ int removeChar(){
                         current_row+1,
                         sizeof(struct string)*(e.rowsNum - (e.cy+e.rowoff+1) )
                 );
+            }
         }
-        
-        e.rowsNum--;
+        if (current_row->len == 0)
+            e.rowsNum--;
 
         e.modification_num++;
         return 1;
