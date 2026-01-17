@@ -5,6 +5,7 @@
 
 /// Includes ///
 
+#include <sys/wait.h>
 #include <termios.h>
 #include <ctype.h>
 #include <errno.h>
@@ -81,7 +82,7 @@ void drawMessage(struct string *ab , struct string message);
 void writeMessage(struct string *destination , char* message , int len);
 void freeMessage();
 /// Input ///
-char readKey();
+char readKey(int* readStatus);
 void pathToFileName(char* path);
 void readFile(char* file);
 

@@ -1,12 +1,18 @@
 #include "utilities.h"
 
+// Helper method
+
 
 void refreshScreen(){
+    if (getWindowSize(&e.windowsLength, &e.windowsWidth) == -1)
+        die("getWindowSize");
+    e.windowsLength -=2;
+    
+
     struct string ab;
     initString(&ab);
 
-
-    stringAppend(&ab,"\x1b[2J",4);
+    stringAppend(&ab, "\x1b[2J\x1b[3J",8);
     stringAppend(&ab, "\x1b[H" ,3);
     
     drawRows(&ab);
@@ -18,6 +24,7 @@ void refreshScreen(){
         freeMessage();
 
     if (e.message.len) drawMessage(&ab,e.message);
+    if (e.message.len > e.windowsWidth) e.windowsLength--;
 
     char ch[100];
     snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1);
@@ -38,9 +45,9 @@ void drawStatusLine(struct string *ab){
             e.rowsNum ,
             e.modification_num ? "(modified)" : "" 
             );
+    
     char percent[30];
     int len_percent;
-    
     if (e.cy+e.rowoff == 0 )
         len_percent = snprintf(percent , sizeof(percent),"TOP");
     else if (e.cy + e.rowoff >= e.rowsNum -1)
@@ -74,7 +81,7 @@ void drawRows(struct string *ab){
                  
                 int welcomelen = snprintf(welcome, sizeof(welcome),
                         "Welcome to my text editor !");
-                if (welcomelen > e.windowsLength) welcomelen = e.windowsLength;
+                if (welcomelen > e.windowsWidth) welcomelen = e.windowsWidth;
                 int padding = (e.windowsWidth-welcomelen)/2;
                 stringAppend(ab, "⮚" , 4);
                 if (padding)padding --;

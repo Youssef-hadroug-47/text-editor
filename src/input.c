@@ -1,12 +1,10 @@
 #include "utilities.h"
 
-char readKey(){
+char readKey(int* readStatus){
     char c ;
-    int err;
-    while( (err = read(STDIN_FILENO,&c,sizeof(char)) != 1 )){
-        if (err == -1 && errno != EAGAIN)
-            die("read");
-    }
+    *readStatus = read(STDIN_FILENO,&c,sizeof(char)); 
+    if (*readStatus == -1 && errno != EAGAIN)
+        die("read");
     return c;
 }
 void pathToFileName(char* path){

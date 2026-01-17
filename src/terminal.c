@@ -21,9 +21,7 @@ void initEditorConfig(){
     e.cy=0;
     e.rowoff=0;
     e.coloff=0;
-    if (getWindowSize(&e.windowsLength, &e.windowsWidth) == -1)
-        die("getWindowSize");
-    e.windowsLength -=2;
+
     e.rowsNum=0;
     e.rowBuff = NULL;
 
@@ -38,7 +36,9 @@ void initEditorConfig(){
     e.messageWait = 5;
 }
 void handleKeys(){
-    char c = readKey();
+    int readStatus;
+    char c = readKey(&readStatus);
+    if (readStatus == 0) return;
     if (c != CTRL_KEY('q')) e.quit_attempts = 0;
 
     switch (c){
@@ -50,7 +50,7 @@ void handleKeys(){
                 break;
             }
 
-            write(STDOUT_FILENO ,"\x1b[2J" ,4);
+            write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
             write(STDOUT_FILENO , "\x1b[H" ,3);
             
             exit(0);
@@ -148,7 +148,7 @@ void handleKeys(){
     }
 }
 void die(const char* s){
-    write(STDOUT_FILENO ,"\x1b[2J" ,4);
+    write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
     write(STDOUT_FILENO , "\x1b[H" ,3);
     perror(s);
     exit(1);
@@ -198,8 +198,9 @@ struct string editorPrompt(char* prompt){
     while(1){
         writeMessage(&e.message, command.b, command.len);
         refreshScreen(); 
-        char c = readKey();
-
+        int readStatus;
+        char c = readKey(&readStatus);
+        if (readStatus == 0) continue;
         switch (c){
             case ENTER :
                 e.cx= 0;
