@@ -124,12 +124,14 @@ void handleKeys(){
                                         break;
                                     case DOWN_ARROW :
                                         break;
+                                    default :
+                                        tcflush(STDIN_FILENO, TCIFLUSH);
 
                                 }
                             }
                             break;
                         default : 
-                            fflush(STDIN_FILENO);
+                            tcflush(STDIN_FILENO, TCIFLUSH);
                     }
                     break;
                 case DOLLAR_SIGN:
@@ -230,7 +232,8 @@ struct string editorPrompt(char* prompt){
                 e.cy = 0;
                 stringFree(&command);
                 return returnInfo;
-            case BACKSPACE:
+            case BACKSPACE1:
+            case BACKSPACE2:
                 if(e.cx != strlen(prompt)){
                     removeCharInRow(&returnInfo, e.cx-strlen(prompt));
                     removeCharInRow(&command, e.cx);
