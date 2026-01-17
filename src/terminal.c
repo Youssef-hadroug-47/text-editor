@@ -1,4 +1,6 @@
 #include "utilities.h"
+#include <stdio.h>
+#include <unistd.h>
 
 #define QUIT_ATTEMPTS 2 
 
@@ -82,7 +84,8 @@ void handleKeys(){
         case ENTER:
             enter();
             break;
-        case BACKSPACE:
+        case BACKSPACE2:
+        case BACKSPACE1:
             backspace(); 
             break;
         
@@ -125,6 +128,8 @@ void handleKeys(){
                                 }
                             }
                             break;
+                        default : 
+                            fflush(STDIN_FILENO);
                     }
                     break;
                 case DOLLAR_SIGN:
