@@ -43,7 +43,7 @@ void drawStatusLine(struct string *ab){
             (e.rowsNum == 0 || e.rowsNum == 1) ? "%.20s - %d line %s" : "%.20s - %d lines %s",
             e.filename ? e.filename : "[No Name]",
             e.rowsNum ,
-            e.modification_num ? "(modified)" : "" 
+            e.modification_num > 0 ? "(modified)" : "" 
             );
     
     char percent[30];
@@ -73,13 +73,13 @@ void drawRows(struct string *ab){
     for (int y =0;y<e.windowsLength;y++){
 
         int i= y+e.rowoff;
-        char number[32] ;
-        char padding[10];
-        int len = snprintf(padding, sizeof(padding),"%d", i);
+        //char number[32] ;
+        //char padding[10];
+        //int len = snprintf(padding, sizeof(padding),"%d", i);
         
-        int paddingLen = e.startingX - len;
-        snprintf(number, sizeof(number), "\e[38;5;23m%02d\e[0m",i);
-        stringAppend(ab,number,strlen(number));
+        //int paddingLen = e.startingX - len;
+        //snprintf(number, sizeof(number), "\e[38;5;23m%02d\e[0m",i);
+        //stringAppend(ab,number,strlen(number));
         if (i>=e.rowsNum){
             if (e.rowBuff == NULL ) {
                     char* editorName [] ={ 

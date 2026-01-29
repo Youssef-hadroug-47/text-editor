@@ -25,14 +25,20 @@ void moveCursorToIndex(int idx){
 }
 void upArrow(){
     int row = e.cy+e.rowoff;
-    if(row > 0 && row -1 < e.rowsNum && e.cx+e.coloff >= e.rowBuff[row].len) 
+    if(row > 0 && row -1 < e.rowsNum &&
+            ( e.cx+e.coloff >= e.rowBuff[row].len  ||  e.cx+e.coloff > e.rowBuff[row-1].len ) ) 
         moveCursorToIndex(e.rowBuff[row-1].len); 
     if (e.cy) e.cy--; 
     else if(e.rowoff) e.rowoff--;
 }
 void downArrow(){
-    if(e.cy+e.rowoff+1 < e.rowsNum  && e.cx+e.coloff >= e.rowBuff[e.cy+e.rowoff].len) 
-        moveCursorToIndex(e.rowBuff[e.cy+e.rowoff+1].len);
+    int row = e.cy+e.rowoff;
+    if (row == e.rowsNum-1 )
+        moveCursorToIndex(0);
+
+    if(row+1 < e.rowsNum  && 
+            ( e.cx+e.coloff >= e.rowBuff[row].len || e.cx+e.coloff > e.rowBuff[row+1].len)) 
+        moveCursorToIndex(e.rowBuff[row+1].len);
 
     if(e.cy != e.windowsLength -1)  e.cy++;
     else e.rowoff++;

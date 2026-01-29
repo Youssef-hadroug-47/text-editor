@@ -19,7 +19,7 @@ void initEditorConfig(){
     e.cy=0;
     e.rowoff=0;
     e.coloff=0;
-    e.startingX = 5;
+    e.startingX = 0;
 
     e.rowsNum=0;
     e.rowBuff = NULL;
