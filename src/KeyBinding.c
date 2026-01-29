@@ -86,16 +86,17 @@ void enter(){
     e.cx=0;
     e.coloff=0;
 }
-void character(char c){
-    if (!iscntrl(c)){
-        insertChar(c);
+void character(char* input , int inputLength){
+    if ( (inputLength == 1 && !iscntrl(input[0]) ) || inputLength > 1 ){
+        insertChar(input ,inputLength);
         if (e.cx != e.windowsWidth-1) e.cx++;
         else e.coloff++;
     }
 }
 void tab(){
     for (int i =0 ;i<4;i++){
-        insertChar(' ');
+        char c = ' ';
+        insertChar(&c,1);
         if (e.cx != e.windowsWidth-1) e.cx++;
         else e.coloff++;
     }

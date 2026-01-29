@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <stddef.h>
 #include <time.h> 
+#include <fcntl.h>
 /// structures ///
 
 #define CTRL_KEY(k) ((k)-'a'+1)
@@ -74,6 +75,7 @@ void die(const char* s);
 int getWindowSize(int* rows , int* cols);
 void initEditorConfig();
 void exiting();
+int utf8_len(unsigned char c);
 struct string editorPrompt(char* prompt);
 /// Output ///
 void refreshScreen();
@@ -94,9 +96,9 @@ void stringAppend(struct string *ab , const char* c , int len);
 void stringFree(struct string *ab);
 
 /// editing ////
-void insertCharInRow(struct string* ab ,int at ,char c);
-void insertChar(char c);
-void removeCharInRow(struct string* ab,int at);
+void insertCharInRow(struct string* ab ,int at ,char* input , int inputLength);
+void insertChar(char* input , int inputLength);
+void removeCharInRow(struct string* ab,int at , int len);
 int removeChar();
 void saveToDisk();
 void insertNewLine();
@@ -108,7 +110,7 @@ void upArrow();
 void downArrow();
 void backspace();
 void enter();
-void character(char c);
+void character(char* input , int inputLength);
 void dollarSign();
 void tab();
 void gotoPrevWord();

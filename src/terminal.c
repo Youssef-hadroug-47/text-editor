@@ -1,4 +1,5 @@
 #include "utilities.h"
+#include <unistd.h>
 
 #define QUIT_ATTEMPTS 2 
 
@@ -14,6 +15,14 @@ int getWindowSize(int *rows, int *cols){
         return 0;
     }
 }
+int utf8_len(unsigned char c) {
+    if ((c & 0x80) == 0) return 1;
+    if ((c & 0xE0) == 0xC0) return 2;
+    if ((c & 0xF0) == 0xE0) return 3;
+    if ((c & 0xF8) == 0xF0) return 4;
+    return -1;
+}
+
 void initEditorConfig(){
     e.cx=0;
     e.cy=0;
@@ -38,8 +47,8 @@ void handleKeys(){
     int readStatus;
     char c = readKey(&readStatus);
     if (readStatus == 0) return;
-    if (c != CTRL_KEY('q')) e.quit_attempts = 0;
 
+    if (c != CTRL_KEY('q')) e.quit_attempts = 0;
     switch (c){
         case QUIT:
             if (e.quit_attempts == 0 && e.modification_num){
@@ -89,9 +98,9 @@ void handleKeys(){
             break;
         
         case ESCAPE :{
-            char seq[5] ;
-            if(read(STDIN_FILENO,&seq[0],1) == -1){break;}
-            if(read(STDIN_FILENO,&seq[1],1) == -1){break;}
+            char seq[6];
+            if (read(STDIN_FILENO,&seq[0],1) != 1)break;
+            if (read(STDIN_FILENO,&seq[1],1) != 1)break;
             switch(seq[0]){
                 case '[':
                     switch (seq[1]){
@@ -108,9 +117,9 @@ void handleKeys(){
                             leftArrow();     
                             break;
                         case '1':
-                            if(read(STDIN_FILENO,&seq[2],1) == -1){break;}
-                            if(read(STDIN_FILENO,&seq[3],1) == -1){break;}
-                            if(read(STDIN_FILENO,&seq[4],1) == -1){break;}
+                            if (read(STDIN_FILENO,&seq[2],1) != 1)break;
+                            if (read(STDIN_FILENO,&seq[3],1) != 1)break;
+                            if (read(STDIN_FILENO,&seq[4],1) != 1)break;
                             if (seq[2] == ';' && seq[3] == '5'){
                                 switch (seq[4]){
                                     case LEFT_ARROW :
@@ -159,9 +168,21 @@ void handleKeys(){
                     e.coloff = 0;
                     break;
             }
+            break;
         }
-        default :
-           character(c); 
+        default :{
+            unsigned char buf[4];
+            buf[0] = c;
+            int len = utf8_len(buf[0]);
+            if (len == -1)
+                return ;
+
+            for (int i = 1; i < len; i++) {
+                if (read(STDIN_FILENO, &buf[i], 1) != 1) return;
+            }
+            character(buf, len);
+
+        }
     }
 }
 void die(const char* s){
@@ -257,15 +278,15 @@ struct string editorPrompt(char* prompt){
             case BACKSPACE1:
             case BACKSPACE2:
                 if(e.cx != strlen(prompt)){
-                    removeCharInRow(&returnInfo, e.cx-strlen(prompt));
-                    removeCharInRow(&command, e.cx);
+                    removeCharInRow(&returnInfo, e.cx-strlen(prompt) , 1);
+                    removeCharInRow(&command, e.cx , 1);
                     e.cx--;
                 }
                 break;
             default:{
                 if (!iscntrl(c) && e.cx != e.windowsWidth-1){
-                        insertCharInRow(&command,e.cx,c);
-                        insertCharInRow(&returnInfo ,e.cx-strlen(prompt), c);
+                        insertCharInRow(&command,e.cx,&c,1);
+                        insertCharInRow(&returnInfo ,e.cx-strlen(prompt), &c,1);
                         e.cx++;
                 }
             }
