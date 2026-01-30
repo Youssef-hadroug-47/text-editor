@@ -1,5 +1,4 @@
 #include "utilities.h"
-#include <unistd.h>
 
 #define QUIT_ATTEMPTS 2 
 
@@ -71,21 +70,21 @@ void handleKeys(){
                 struct string newFile = editorPrompt("save as ");
                 
                 if (newFile.b == NULL){
-                    freeMessage();
+                    stringFree(&e.message);
                     break;
                 }
                 
-                e.filePath = malloc(newFile.len+1);
-                memcpy(e.filePath ,newFile.b , newFile.len);
+                e.filePath = malloc(newFile.lenByte+1);
+                memcpy(e.filePath ,newFile.b , newFile.lenByte);
                 pathToFileName(newFile.b);
                 stringFree(&newFile);
             }
             char message[100];
-            snprintf(message,sizeof(message),
+            int messageLen = snprintf(message,sizeof(message),
                     (e.modification_num > 1) ? "%d modifications written to disk !" : "%d modification written to disk !"
                     ,e.modification_num
             );
-            writeMessage(&e.message, message, strlen(message));
+            writeMessage(&e.message, message, messageLen);
             saveToDisk();
             break;
         }
@@ -171,7 +170,7 @@ void handleKeys(){
             break;
         }
         default :{
-            unsigned char buf[4];
+            char buf[4];
             buf[0] = c;
             int len = utf8_len(buf[0]);
             if (len == -1)
@@ -236,7 +235,7 @@ struct string editorPrompt(char* prompt){
     stringAppend(&command, prompt ,strlen(prompt));
 
     while(1){
-        writeMessage(&e.message, command.b, command.len);
+        writeMessage(&e.message, command.b, command.lenByte);
         refreshScreen(); 
         int readStatus;
         char c = readKey(&readStatus);

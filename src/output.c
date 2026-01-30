@@ -1,6 +1,4 @@
 #include "utilities.h"
-#include <math.h>
-#include <stdio.h>
 
 
 void refreshScreen(){
@@ -21,16 +19,16 @@ void refreshScreen(){
     time_t current_time;
     time(&current_time);
     if ((int)current_time - e.messageTime >= e.messageWait ) 
-        freeMessage();
+        stringFree(&e.message);
 
     if (e.message.len) drawMessage(&ab,e.message);
     if (e.message.len > e.windowsWidth) e.windowsLength--;
 
     char ch[100];
-    snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1+e.startingX);
-    stringAppend(&ab, ch ,strlen(ch));
+    int len = snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1+e.startingX);
+    stringAppend(&ab, ch ,len);
     
-    write(STDOUT_FILENO ,ab.b,ab.len);
+    write(STDOUT_FILENO ,ab.b,ab.lenByte);
     stringFree(&ab);
 }
 
@@ -101,14 +99,14 @@ void drawRows(struct string *ab){
                     int startIdx = (e.windowsLength - nameHeight)/2 > 0 ? (e.windowsLength - nameHeight)/2 : 0;
 
                     if ( i >= startIdx + nameHeight || i < startIdx){
-                        stringAppend(ab,"⮚",4);
+                        stringAppend(ab,"🟆",4);
                     }
                     else if (i >= startIdx ){
                         int x = i-startIdx; 
                         
                         int horizontalPadding = (e.windowsWidth-1-nameWidth)/2 > 0 ? (e.windowsWidth-1-nameWidth)/2 : 0; 
                         int idx = (horizontalPadding - e.coloff) > 0 ? horizontalPadding - e.coloff : 0;
-                        stringAppend(ab, "⮚", 4);
+                        stringAppend(ab, "🟆", 4);
                         while ( idx > 0){
                             stringAppend(ab, " ", 1);
                             idx--;
@@ -122,13 +120,14 @@ void drawRows(struct string *ab){
                     }
             }
             else {
-              stringAppend(ab, "⮚", 4);
+              stringAppend(ab, "🟆", 4);
             }
         }
         else {
-            int len = (e.rowBuff+i)->len - e.coloff;
+            int len = (e.rowBuff+i)->lenByte - getPos(
+                    e.coloff , (e.rowBuff+i)->b );
             if (len < 0) len =0;
-            if (len > e.windowsWidth) len = e.windowsWidth;
+            if (e.rowBuff[i].len - e.coloff > e.windowsWidth) len = getPos( e.windowsWidth , (e.rowBuff+i)->b );
             stringAppend(ab, (e.rowBuff+i)->b+e.coloff  , len);
         }
         stringAppend(ab ,"\r\n" ,2);
@@ -138,22 +137,17 @@ void drawMessage(struct string *ab, struct string message){
     const char* color = "\e[38;5;214m";
     const char* reset = "\e[0m";
     stringAppend(ab, color, strlen(color));
-    stringAppend(ab, message.b, message.len);
+    stringAppend(ab, message.b, message.lenByte);
     stringAppend(ab, reset, strlen(reset));
 }
 void writeMessage(struct string *destination , char* message , int len){
     if (destination->b == NULL) destination->b = malloc(len+1);
     else destination->b = realloc (destination->b,len+1);
     memcpy(destination->b ,message , len+1);
-    destination->len = len;
+    destination->lenByte = len;
+    destination->len = getPos(len , message );
    
     time_t current_time;
     time(&current_time);
     e.messageTime = (int)current_time ;
 }
-void freeMessage(){
-    free(e.message.b);
-    e.message.b = NULL;
-    e.message.len = 0;
-}
-

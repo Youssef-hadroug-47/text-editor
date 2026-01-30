@@ -94,9 +94,9 @@ void character(char* input , int inputLength){
     }
 }
 void tab(){
+    char tab[4]="    ";
+    insertChar(tab, 4);
     for (int i =0 ;i<4;i++){
-        char c = ' ';
-        insertChar(&c,1);
         if (e.cx != e.windowsWidth-1) e.cx++;
         else e.coloff++;
     }
@@ -114,7 +114,9 @@ void dollarSign(){
 
 // Help method
 int nextSpace(char* string , int at){
-    int len = strlen(string);
+    int lenInByte = strlen(string);
+    int len = getPos(lenInByte,string);
+
     if (at >= len -1) return -1;
     at++;
     int i = at;
@@ -145,7 +147,8 @@ void gotoNextWord(){
 }
 // Help method
 int prevSpace(char* string , int at){
-    int len = strlen(string);
+    int lenInByte = strlen(string);
+    int len = getPos(lenInByte,string);
 
     if (at == 0) return -1;
     at--;

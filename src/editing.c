@@ -1,21 +1,33 @@
 #include "utilities.h"
 
-int getPos(int at, struct string* ab){
+int getPosInBytes(int at, char * input , int len ){
     int i = 0;
     int pos = 0;
     char c ;
-    while(i<ab->len && pos != at){
-        c = ab->b[i];
+    while(i<len && pos != at){
+        c = input[i];
         i+=utf8_len(c);
         pos++;
     }
     return i;
 }
+int getPos(int bytes, char *input){
+    int at = 0;
+    int i = 0;
+    char c ;
+    while ( i < bytes ){
+        c = input[i];
+        i += utf8_len(c);
+        at++;
+    }
+    return at;
+}
 void insertCharInRow(struct string *row, int at ,char* input , int inputLength){
-        row->b = realloc(row->b , row->len + inputLength + 1);
-        memmove(row->b+at+inputLength ,row->b+at ,row->len-at+1);
+        row->b = realloc(row->b , row->lenByte + inputLength + 1);
+        memmove(row->b+at+inputLength ,row->b+at ,row->lenByte-at+1);
         memcpy(row->b+at , input , inputLength);
-        row->len+=inputLength;
+        row->lenByte += inputLength;
+        row->len += getPos(inputLength, input);
 }
 void insertChar(char* input , int inputLength){
     if (e.cy+e.rowoff >= e.rowsNum ){ 
@@ -27,7 +39,7 @@ void insertChar(char* input , int inputLength){
     
     struct string* current_row = e.rowBuff+e.cy+e.rowoff;
     int current_col = e.cx+e.coloff;
-    int pos = getPos(current_col, current_row);
+    int pos = getPosInBytes(current_col, current_row->b , current_row->lenByte);
     
     if(current_col < current_row ->len){
         insertCharInRow(current_row, pos, input , inputLength);
@@ -42,12 +54,13 @@ void insertChar(char* input , int inputLength){
 
     e.modification_num+=inputLength;
 }
-void removeCharInRow(struct string* row , int at , int len){
-        if (len > row->len)
+void removeCharInRow(struct string* row , int at , int lenByte){
+        if (lenByte > row->lenByte)
             return ;
-        memcpy(row->b+at-len ,row->b+at ,row->len - at);
-        row->len -= len;
-        row->b[row->len] = '\0';
+        memcpy(row->b+at-lenByte ,row->b+at ,row->lenByte - at);
+        row->lenByte -= lenByte;
+        row->len -= getPos(lenByte,row->b+at-lenByte);
+        row->b[row->lenByte] = '\0';
 }
 
 int removeChar(){
@@ -56,12 +69,12 @@ int removeChar(){
         return 0;
     int current_col = e.cx + e.coloff;
     struct string* current_row = e.rowBuff+e.cy+e.rowoff;
-    int pos = getPos(current_col , current_row);
+    int pos = getPosInBytes(current_col , current_row->b , current_row->lenByte);
 
-    if ( current_col >0  && current_col <= current_row->len ){
+    if ( current_col >0  && pos <= current_row->lenByte ){
     
         removeCharInRow(current_row, pos , 
-                utf8_len(current_row->b[getPos(current_col-1,current_row)])
+                utf8_len(current_row->b[getPosInBytes(current_col-1,current_row->b , current_row->lenByte)])
                 );
 
         e.modification_num++;
@@ -70,7 +83,7 @@ int removeChar(){
     else if (current_col == 0 ){
 
         if (e.cy+e.rowoff){
-            if(current_row->len != 0) stringAppend(current_row-1 ,current_row->b, current_row->len);
+            if(current_row->lenByte != 0) stringAppend(current_row-1 ,current_row->b, current_row->lenByte);
             if(e.cy+e.rowoff < e.rowsNum-1) {
                 free(current_row->b);
                 memmove(current_row,
@@ -79,7 +92,7 @@ int removeChar(){
                 );
             }
         }
-        else if (e.rowsNum > 1 || current_row->len) return 0;
+        else if (e.rowsNum > 1 || current_row->lenByte) return 0;
 
         e.rowsNum--;
         e.modification_num++;
@@ -103,7 +116,8 @@ void insertNewLine(){
         e.modification_num++;
         return;
     }
-    int pos = getPos(current_col , e.rowBuff+current_row);
+
+    int pos = getPosInBytes(current_col , (e.rowBuff+current_row)->b , (e.rowBuff+current_row)->lenByte );
     
     // Allocate memory to a new line
     e.rowBuff = (struct string*)realloc(e.rowBuff , sizeof(struct string) * (e.rowsNum+1) );
@@ -114,22 +128,23 @@ void insertNewLine(){
     e.rowsNum++;
     
     // add tail to next new line
-    int nextLineLen = (e.rowBuff[current_row].len-pos >= 0 ) ? (e.rowBuff[current_row].len-pos) : 0 ; 
+    int nextLineLen = (e.rowBuff[current_row].lenByte-pos >= 0 ) ? (e.rowBuff[current_row].lenByte-pos) : 0 ; 
     e.rowBuff[current_row+1].b = (char*)malloc( sizeof(char) * (nextLineLen+1) );
     if(nextLineLen){ 
         memcpy(e.rowBuff[current_row+1].b ,e.rowBuff[current_row].b+pos ,nextLineLen);
         e.rowBuff[current_row+1].b[nextLineLen] = '\0';
     }
-    e.rowBuff[current_row+1].len = nextLineLen;
+    e.rowBuff[current_row+1].lenByte = nextLineLen;
+    e.rowBuff[current_row+1].len = getPos(nextLineLen , e.rowBuff[current_row+1].b );
     
     // rewrite current line
-    int currentLineLen = e.rowBuff[current_row].len - nextLineLen; 
+    int currentLineLen = e.rowBuff[current_row].lenByte - nextLineLen; 
     char * temp = e.rowBuff[current_row].b;
     e.rowBuff[current_row].b = (char*)realloc(e.rowBuff[current_row].b , sizeof(char) * (currentLineLen+1));
     if(currentLineLen) memcpy(e.rowBuff[current_row].b ,temp ,currentLineLen);
-    e.rowBuff[current_row].len = currentLineLen;
+    e.rowBuff[current_row].lenByte = currentLineLen;
+    e.rowBuff[current_row].len = getPos(currentLineLen , e.rowBuff[current_row].b );
     if(currentLineLen) e.rowBuff[current_row].b[currentLineLen] = '\0';
-    // I have differ len from byteLen may be add it to the string struct //
 
     e.modification_num++;
 }
@@ -139,7 +154,7 @@ void saveToDisk (){
     if (file == NULL) die("fopen") ;
     
     for (int i =0 ;i<e.rowsNum ;i++){
-        if(e.rowBuff[i].len) write(fileno(file), e.rowBuff[i].b,e.rowBuff[i].len);
+        if(e.rowBuff[i].lenByte) write(fileno(file), e.rowBuff[i].b,e.rowBuff[i].lenByte);
 
         if (i != e.rowsNum-1){
             write(fileno(file),"\n",1);

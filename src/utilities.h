@@ -24,6 +24,7 @@
 struct string{
     char* b;
     int len;
+    int lenByte;
 };
 struct editorConfig {
     int cx,cy;
@@ -83,7 +84,6 @@ void drawRows(struct string *ab);
 void drawStatusLine(struct string *ab);
 void drawMessage(struct string *ab , struct string message);
 void writeMessage(struct string *destination , char* message , int len);
-void freeMessage();
 void drawEditorName(struct string *ab);
 /// Input ///
 char readKey(int* readStatus);
@@ -96,6 +96,8 @@ void stringAppend(struct string *ab , const char* c , int len);
 void stringFree(struct string *ab);
 
 /// editing ////
+int getPos(int at , char* input );
+int getBytePos(int at , char* input , int len);
 void insertCharInRow(struct string* ab ,int at ,char* input , int inputLength);
 void insertChar(char* input , int inputLength);
 void removeCharInRow(struct string* ab,int at , int len);
