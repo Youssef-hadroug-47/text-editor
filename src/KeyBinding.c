@@ -23,6 +23,36 @@ void moveCursorToIndex(int idx){
 
     }
 }
+int nextSpace(char* string , int at){
+    int lenInByte = strlen(string);
+    int len = getPos(lenInByte,string);
+
+    if (at >= len -1) return -1;
+    at++;
+    int i = at;
+    while(i < len && string[i] == ' '){i++;}
+    if (i == len) return -1;
+    while(i < len && string[i] != ' '){i++;}
+    return --i;
+}
+int prevSpace(char* string , int at){
+    int lenInByte = strlen(string);
+    int len = getPos(lenInByte,string);
+
+    if (at == 0) return -1;
+    at--;
+
+    int i = at;
+    while( i >= 0 && string[i] == ' '){i--;}
+    if (i == -1) return -1;
+    while(i >= 0 && string[i] != ' '){i--;}
+    if (i == -1) return 0;
+    else return ++i;
+    
+
+    return 0;
+}
+
 void upArrow(){
     int row = e.cy+e.rowoff;
     if(row > 0 && row -1 < e.rowsNum &&
@@ -110,21 +140,6 @@ void dollarSign(){
     e.cx= len ;
 }
 
-
-
-// Help method
-int nextSpace(char* string , int at){
-    int lenInByte = strlen(string);
-    int len = getPos(lenInByte,string);
-
-    if (at >= len -1) return -1;
-    at++;
-    int i = at;
-    while(i < len && string[i] == ' '){i++;}
-    if (i == len) return -1;
-    while(i < len && string[i] != ' '){i++;}
-    return --i;
-}
 void gotoNextWord(){
     if (e.rowBuff == NULL) return; 
     int at = e.cx+e.coloff;
@@ -144,24 +159,6 @@ void gotoNextWord(){
     else
         moveCursorToIndex(nextWord);
  
-}
-// Help method
-int prevSpace(char* string , int at){
-    int lenInByte = strlen(string);
-    int len = getPos(lenInByte,string);
-
-    if (at == 0) return -1;
-    at--;
-
-    int i = at;
-    while( i >= 0 && string[i] == ' '){i--;}
-    if (i == -1) return -1;
-    while(i >= 0 && string[i] != ' '){i--;}
-    if (i == -1) return 0;
-    else return ++i;
-    
-
-    return 0;
 }
 void gotoPrevWord(){
     if (e.rowBuff == NULL) return;

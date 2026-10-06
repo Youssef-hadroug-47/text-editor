@@ -1,11 +1,17 @@
 #include "utilities.h"
 
-char readKey(int* readStatus){
-    char c ;
-    *readStatus = read(STDIN_FILENO,&c,sizeof(char)); 
-    if (*readStatus == -1 && errno != EAGAIN)
-        die("read");
-    return c;
+int readKey(char* buff, int* len){
+    *len = 0;
+    int readStatus;
+    char c;
+    while ((readStatus = read(STDIN_FILENO, &c, sizeof(char))) == 1) {
+      if (sizeof(buff) < *len) return -1;
+      memcpy(buff + *len, &c, 1);
+      (*len)++;
+    }
+
+    if (readStatus == -1 && errno != EAGAIN) return -1;
+    return *len > 0 ? 1 : 0;
 }
 void pathToFileName(char* path){
     int i = strlen(path);

@@ -1,6 +1,5 @@
 #include "utilities.h"
 
-
 void refreshScreen(){
     if (getWindowSize(&e.windowsLength, &e.windowsWidth) == -1)
         die("getWindowSize");
@@ -31,7 +30,6 @@ void refreshScreen(){
     write(STDOUT_FILENO ,ab.b,ab.lenByte);
     stringFree(&ab);
 }
-
 void drawStatusLine(struct string *ab){
     const char* color =  "\e[48;5;25m";
     const char* reset = "\e[0m";
@@ -66,7 +64,6 @@ void drawStatusLine(struct string *ab){
     stringAppend(ab,reset,strlen(reset));
     stringAppend(ab,"\n\r",2);
 }
-
 void drawRows(struct string *ab){
     for (int y =0;y<e.windowsLength;y++){
 

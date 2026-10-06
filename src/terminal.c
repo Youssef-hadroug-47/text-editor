@@ -45,13 +45,61 @@ void initEditorConfig(){
     initString(&e.message);
     e.messageWait = 5;
 }
-void handleKeys(){
-    int readStatus;
-    char c = readKey(&readStatus);
-    if (readStatus == 0) return;
+int createEvent(const char* entryBuffer, int len) {
+  if (!len) return -1;
+  
+  switch (entryBuffer[0]) {
+    case ESCAPE:
+      break;
+    case DOLLAR_SIGN:
+      return DOLLAR_SIGN;
+  }
 
-    if (c != CTRL_KEY('q')) e.quit_attempts = 0;
-    switch (c){
+  if (entryBuffer[1] == '['){
+      switch (entryBuffer[2]){
+        case UP_ARROW:
+          return UP_ARROW;
+        case DOWN_ARROW:
+          return DOWN_ARROW;
+        case RIGHT_ARROW:
+          return RIGHT_ARROW;
+        case LEFT_ARROW:
+          return LEFT_ARROW;
+        case '1':
+          if (entryBuffer[3] == ';' && entryBuffer[4] == '5'){
+            switch (entryBuffer[5]){
+              case LEFT_ARROW :
+                return CTRL_LEFT_ARROW;
+              case RIGHT_ARROW :
+                return CTRL_RIGHT_ARROW;
+              case UP_ARROW :
+              case DOWN_ARROW :
+                return -1;
+            }
+          }
+          else if (entryBuffer[3] == ';' && entryBuffer[4] == '3'){
+            switch (entryBuffer[5]){
+              case LEFT_ARROW :
+              case RIGHT_ARROW :
+                return -1;
+              case UP_ARROW :
+                return ALT_ARROW_UP;
+              case DOWN_ARROW :
+                return ALT_ARROW_DOWN;
+            }
+          }
+          break;
+      }
+  }
+  return -1;
+}
+
+int handleKeys(const char* buff, const int len) {
+
+    if (!len) return 0;  
+
+    if (buff[0] != CTRL_KEY('q')) e.quit_attempts = 0;
+    switch (buff[0]){
         case QUIT:
             if (e.quit_attempts == 0 && e.modification_num){
                 char pop_up[] = "Warning ! File has unsaved changes. ";
@@ -100,98 +148,78 @@ void handleKeys(){
             break;
         
         case ESCAPE :{
-            char seq[6];
-            if (read(STDIN_FILENO,&seq[0],1) != 1)break;
-            if (read(STDIN_FILENO,&seq[1],1) != 1)break;
-            switch(seq[0]){
-                case '[':
-                    switch (seq[1]){
-                        case UP_ARROW:
-                            upArrow();
-                            break;
-                        case DOWN_ARROW:
-                            downArrow(); 
-                            break;
-                        case RIGHT_ARROW:
-                            rightArrow();
-                            break;
-                        case LEFT_ARROW:
-                            leftArrow();     
-                            break;
-                        case '1':
-                            if (read(STDIN_FILENO,&seq[2],1) != 1)break;
-                            if (read(STDIN_FILENO,&seq[3],1) != 1)break;
-                            if (read(STDIN_FILENO,&seq[4],1) != 1)break;
-                            if (seq[2] == ';' && seq[3] == '5'){
-                                switch (seq[4]){
-                                    case LEFT_ARROW :
-                                        gotoPrevWord();
-                                        break;
-                                    case RIGHT_ARROW :
-                                        gotoNextWord();
-                                        break;
-                                    case UP_ARROW :
-                                        break;
-                                    case DOWN_ARROW :
-                                        break;
-                                    default :
-                                        tcflush(STDIN_FILENO, TCIFLUSH);
-
-                                }
-                            }
-                            else if (seq[2] == ';' && seq[3] == '3'){
-                                 switch (seq[4]){
-                                    case LEFT_ARROW :
-                                        break;
-                                    case RIGHT_ARROW :
-                                        break;
-                                    case UP_ARROW :
-                                        moveLineUp();
-                                        break;
-                                    case DOWN_ARROW :
-                                        moveLineDown();
-                                        break;
-                                    default :
-                                        tcflush(STDIN_FILENO, TCIFLUSH);                                   
-
-                                }
-
-                            }
-                            break;
-                        default : 
-                            tcflush(STDIN_FILENO, TCIFLUSH);
+            switch(buff[1]){
+              case '[':
+                switch (buff[2]){
+                  case UP_ARROW:
+                    upArrow();
+                    break;
+                  case DOWN_ARROW:
+                    downArrow(); 
+                    break;
+                  case RIGHT_ARROW:
+                    rightArrow();
+                    break;
+                  case LEFT_ARROW:
+                    leftArrow();     
+                    break;
+                  case '1':
+                    if (buff[3] == ';' && buff[4] == '5'){
+                      switch (buff[5]){
+                        case LEFT_ARROW :
+                          gotoPrevWord();
+                          break;
+                        case RIGHT_ARROW :
+                          gotoNextWord();
+                          break;
+                        case UP_ARROW :
+                          break;
+                        case DOWN_ARROW :
+                          break;
+                      }
+                    }
+                    else if (buff[3] == ';' && buff[4] == '3'){
+                      switch (buff[5]){
+                        case LEFT_ARROW :
+                        case RIGHT_ARROW :
+                          break;
+                        case UP_ARROW :
+                          moveLineUp();
+                          break;
+                        case DOWN_ARROW :
+                          moveLineDown();
+                          break;
+                      }
                     }
                     break;
-                case DOLLAR_SIGN:
-                    dollarSign();
-                    break;
-                case ZERO:
-                    e.cx = 0;
-                    e.coloff = 0;
-                    break;
+                }
+                break;
+              case DOLLAR_SIGN:
+                  dollarSign();
+                  break;
+              case ZERO:
+                  e.cx = 0;
+                  e.coloff = 0;
+                  break;
             }
             break;
         }
         default :{
-            char buf[4];
-            buf[0] = c;
-            int len = utf8_len(buf[0]);
+            // int len = utf8_len(buff[0]);
             if (len == -1)
-                return ;
-
-            for (int i = 1; i < len; i++) {
-                if (read(STDIN_FILENO, &buf[i], 1) != 1) return;
-            }
-            character(buf, len);
+                return -1;
+            character((char*)buff, len);
 
         }
     }
+    return 0;
 }
 void die(const char* s){
-    write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
-    write(STDOUT_FILENO , "\x1b[H" ,3);
-    perror(s);
-    exit(1);
+  if (logger) fclose(logger);
+  write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
+  write(STDOUT_FILENO , "\x1b[H" ,3);
+  perror(s);
+  exit(1);
 }
 void exiting(){
     if (e.rowBuff != NULL){
@@ -223,7 +251,7 @@ void enableRawMode(){
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |=(CS8);
     raw.c_cc[VMIN]=0;
-    raw.c_cc[VTIME]=1;
+    raw.c_cc[VTIME]=0;
     if (tcsetattr(STDIN_FILENO,TCSAFLUSH,&raw) == -1) die("tcsetattr");
 }
 void resetAtExit(struct string* command , int prevStartingX){
@@ -233,90 +261,77 @@ void resetAtExit(struct string* command , int prevStartingX){
         e.startingX = prevStartingX;
 }
 struct string editorPrompt(char* prompt){
-    int promptLen = strlen(prompt);
-    int prevStartingX = e.startingX;
-    e.startingX = 0;
-    e.cx = promptLen ;
-    e.cy = e.windowsLength+1;
+  int promptLen = strlen(prompt);
+  int prevStartingX = e.startingX;
+  e.startingX = 0;
+  e.cx = promptLen ;
+  e.cy = e.windowsLength+1;
 
-    struct string returnInfo;
-    initString(&returnInfo);
-    
-    struct string command;
-    initString(&command);
-    stringAppend(&command, prompt ,promptLen);
+  struct string returnInfo;
+  initString(&returnInfo);
 
-    while(1){
-        writeMessage(&e.message, command.b, command.lenByte);
-        refreshScreen(); 
-        int readStatus;
-        char c = readKey(&readStatus);
-        if (readStatus == 0) continue;
-        switch (c){
-            case ENTER :
-                stringAppend(&returnInfo, command.b, command.lenByte);
-                resetAtExit(&command, prevStartingX);
-                return returnInfo;
-            case ESCAPE :{
-                char seq[2] = {'\0','\0'} ;
-                if(read(STDIN_FILENO,&seq[0],1) == -1){break;}
-                if(read(STDIN_FILENO,&seq[1],1) == -1){break;}
-                switch(seq[0]){
-                    case '[':
-                        switch (seq[1]){
-                            case RIGHT_ARROW :
-                                if(command.len && e.cx != command.len-1 )e.cx++;
-                                break;
-                            case LEFT_ARROW :
-                                if(e.cx) e.cx--;
-                                break;
-                        }
-                        break;
-                }
-                break;
-            }
-            case CTRL_KEY('c'):
-                stringFree(&returnInfo);
-                resetAtExit(&command, prevStartingX);
-                return returnInfo;
-            case BACKSPACE1:
-            case BACKSPACE2:
-                if(e.cx != promptLen ){
-                    int posInBytes = getPosInBytes(e.cx, command.b , command.lenByte);
-                    int charLen = utf8_len(command.b[getPosInBytes(e.cx - 1 , command.b , command.lenByte)]);
-                    removeCharInRow(&command,
-                            posInBytes, 
-                            charLen
-                            );
-                    e.cx--;
-                }
-                break;
-            default:{
-                if (!iscntrl(c) && e.cx != e.windowsWidth-1){
-                        char buf[4];
-                        buf[0] = c;
-                        int len = utf8_len(buf[0]);
-                        if (len == -1){
-                            resetAtExit(&command, prevStartingX);
-                            clearString(&returnInfo);
-                            stringAppend(&returnInfo , "Error !" , 7);
-                            return returnInfo;
-                        }
-                            
+  struct string command;
+  initString(&command);
+  stringAppend(&command, prompt ,promptLen);
 
-                        for (int i = 1; i < len; i++) {
-                            if (read(STDIN_FILENO, &buf[i], 1) != 1){
-                                resetAtExit(&command, prevStartingX);
-                                clearString(&returnInfo);
-                                stringAppend(&returnInfo , "Error !" , 7);
-                                return returnInfo;
-                            }
-                        }
-                        int posInBytes = getPosInBytes(e.cx, command.b, command.lenByte);
-                        insertCharInRow(&command,posInBytes,buf,len);
-                        e.cx++;
+  while(1){
+    writeMessage(&e.message, command.b, command.lenByte);
+    refreshScreen();
+    char buff[8];
+    int len = 0;
+    if(readKey(buff, &len) == -1) continue;
+    switch (buff[0]){
+      case ENTER :
+        stringAppend(&returnInfo, command.b, command.lenByte);
+        resetAtExit(&command, prevStartingX);
+        return returnInfo;
+      case ESCAPE :{
+                     switch(buff[1]){
+                       case '[':
+                         switch (buff[2]){
+                           case RIGHT_ARROW :
+                             if(command.len && e.cx != command.len-1 )e.cx++;
+                             break;
+                           case LEFT_ARROW :
+                             if(e.cx) e.cx--;
+                             break;
+                         }
+                         break;
+                     }
+                     break;
+                   }
+      case CTRL_KEY('c'):
+                   stringFree(&returnInfo);
+                   resetAtExit(&command, prevStartingX);
+                   return returnInfo;
+      case BACKSPACE1:
+      case BACKSPACE2:
+                   if(e.cx != promptLen ){
+                     int posInBytes = getPosInBytes(e.cx, command.b , command.lenByte);
+                     int charLen = utf8_len(command.b[getPosInBytes(e.cx - 1 , command.b , command.lenByte)]);
+                     removeCharInRow(&command,
+                         posInBytes, 
+                         charLen
+                         );
+                     e.cx--;
+                   }
+                   break;
+      default:{
+                if (!iscntrl(buff[0]) && e.cx != e.windowsWidth-1){
+                  int ascii_len = utf8_len(buff[0]);
+                  if (ascii_len == -1){
+                    resetAtExit(&command, prevStartingX);
+                    clearString(&returnInfo);
+                    stringAppend(&returnInfo , "Error !" , 7);
+                    return returnInfo;
+                  }
+
+
+                  int posInBytes = getPosInBytes(e.cx, command.b, command.lenByte);
+                  insertCharInRow(&command, posInBytes, buff, ascii_len);
+                  e.cx++;
                 }
-            }
-        }
+              }
     }
+  }
 }

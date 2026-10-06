@@ -26,6 +26,16 @@ struct string{
     int len;
     int lenByte;
 };
+
+
+enum messageType {
+  WARNING = 1,
+  INFO = 2,
+  ERROR = 3,
+  SUCCESS = 4
+};
+
+extern FILE* logger; 
 struct editorConfig {
     int cx,cy;
     int windowsLength;
@@ -50,10 +60,16 @@ struct editorConfig {
     struct string message;
     int messageTime ;
     int messageWait ;
-    FILE* tester;
     int quit_attempts;
 };
-enum editorKey{
+
+enum editorKey {
+
+    CHARACTER = 3000,
+    CTRL_RIGHT_ARROW = 2003,
+    CTRL_LEFT_ARROW = 2004,
+    ALT_ARROW_UP = 1001,
+    ALT_ARROW_DOWN = 1002,
     LEFT_ARROW = 'D', 
     RIGHT_ARROW = 'C',
     UP_ARROW = 'A',
@@ -70,8 +86,12 @@ enum editorKey{
 };
 extern struct editorConfig e;
 
+/// Logging ///
+int log_message (FILE* log, char* message, int len, enum messageType messagetype);
+
+
 /// Terminal ///
-void handleKeys();
+int handleKeys(const char* buff, const int len);
 void enableRawMode();
 void disableRawMode();
 void die(const char* s);
@@ -79,6 +99,7 @@ int getWindowSize(int* rows , int* cols);
 void initEditorConfig();
 void exiting();
 int utf8_len(unsigned char c);
+int createEvent(const char* entryBuffer, int len);
 struct string editorPrompt(char* prompt);
 /// Output ///
 void refreshScreen();
@@ -88,7 +109,7 @@ void drawMessage(struct string *ab , struct string message);
 void writeMessage(struct string *destination , char* message , int len);
 void drawEditorName(struct string *ab);
 /// Input ///
-char readKey(int* readStatus);
+int readKey(char* buff, int* len);
 void pathToFileName(char* path);
 void readFile(char* file);
 

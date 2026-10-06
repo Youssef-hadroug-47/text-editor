@@ -62,7 +62,6 @@ void removeCharInRow(struct string* row , int at , int lenByte){
         row->len -= getPos(lenByte,row->b+at-lenByte);
         row->b[row->lenByte] = '\0';
 }
-
 int removeChar(){
 
     if (e.cy+e.rowoff >= e.rowsNum)
@@ -101,7 +100,6 @@ int removeChar(){
 
     return 0;
 }
-
 void insertNewLine(){
     int current_row = e.rowoff+e.cy;
     int current_col = e.coloff+e.cx;
@@ -148,13 +146,12 @@ void insertNewLine(){
 
     e.modification_num++;
 }
-
 void saveToDisk (){
     FILE* file = fopen(e.filePath,"w+");
     if (file == NULL) die("fopen") ;
     
     for (int i =0 ;i<e.rowsNum ;i++){
-        if(e.rowBuff[i].lenByte) write(fileno(file), e.rowBuff[i].b,e.rowBuff[i].lenByte);
+        if(e.rowBuff[i].lenByte) write(fileno(file), e.rowBuff[i].b, e.rowBuff[i].lenByte);
 
         if (i != e.rowsNum-1){
             write(fileno(file),"\n",1);
