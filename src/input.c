@@ -5,11 +5,16 @@ int readKey(char* buff, int* len){
     int readStatus;
     char c;
     while ((readStatus = read(STDIN_FILENO, &c, sizeof(char))) == 1) {
+      char code[4];
+      int code_len = snprintf(code, sizeof(code), "%d", c);
+      log_message(logger, code, code_len, INFO);
       if (sizeof(buff) < *len) return -1;
       memcpy(buff + *len, &c, 1);
       (*len)++;
     }
 
+    if (utf8_len(buff[0]) == -1 || (*len == 1 && buff[0] < 0))
+      log_message(logger, "there is an invalid utf8", strlen("there is an invalid utf8"), ERROR);
     if (readStatus == -1 && errno != EAGAIN) return -1;
     return *len > 0 ? 1 : 0;
 }

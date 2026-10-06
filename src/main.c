@@ -27,6 +27,8 @@ void get_editor_key_name(enum editorKey key, char **out_str, size_t *out_len) {
         default:               *out_str = "UNKNOWN";          *out_len = 7;  break;
     }
 }
+
+
 int main (int argc ,char* argv[]){
     
     atexit(exiting);
@@ -45,7 +47,8 @@ int main (int argc ,char* argv[]){
     int len = 0;
 
     refreshScreen();
-
+    
+    struct string better_buff;
     while (1){
       len = 0;
       char buff[8];
@@ -57,7 +60,6 @@ int main (int argc ,char* argv[]){
       // log event with status code
       
       if (!readKey(buff, &len)) continue;
-      log_message(logger, buff, len, INFO);
       get_editor_key_name(createEvent(buff, len), &event, &event_len);
       log_message(logger, event, event_len, INFO);
       handleKeys(buff, len);

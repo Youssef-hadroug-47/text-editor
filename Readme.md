@@ -13,8 +13,8 @@ A simple text editor for opening and editing files.
 - **Ctrl+S** - Save the current file
 - **Ctrl+Q** - Quit the editor
   - If the file has been modified, press **Ctrl+Q** again to confirm quit without saving
-- **$** - Go to end of line
-- **0** - Go to beginning of the line
+- **Alt+$** - Go to end of line
+- **Alt+0** - Go to beginning of the line
 
 ## Known Limitations
 

@@ -51,8 +51,15 @@ int createEvent(const char* entryBuffer, int len) {
   switch (entryBuffer[0]) {
     case ESCAPE:
       break;
-    case DOLLAR_SIGN:
-      return DOLLAR_SIGN;
+    case TAB:
+    case BACKSPACE1:
+    case BACKSPACE2:
+    case ENTER:
+    case SAVE:
+    case QUIT:
+      return entryBuffer[0];
+    default: 
+      return CTRL_KEY(entryBuffer[0]) ? CHARACTER : -1;
   }
 
   if (entryBuffer[1] == '['){
@@ -205,9 +212,6 @@ int handleKeys(const char* buff, const int len) {
             break;
         }
         default :{
-            // int len = utf8_len(buff[0]);
-            if (len == -1)
-                return -1;
             character((char*)buff, len);
 
         }
