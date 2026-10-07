@@ -48,7 +48,6 @@ int prevSpace(char* string , int at){
     while(i >= 0 && string[i] != ' '){i--;}
     if (i == -1) return 0;
     else return ++i;
-    
 
     return 0;
 }
@@ -131,7 +130,12 @@ void tab(){
         else e.coloff++;
     }
 }
-void dollarSign(){
+void gotoBeginningOfLine() {
+  e.cx = 0;
+  e.coloff = 0;
+}
+
+void gotoEndOfLine(){
     if (e.rowBuff == NULL) return;
     int len= e.rowBuff[e.cy+e.rowoff].len ;
     if(len > e.windowsWidth) {
@@ -199,4 +203,20 @@ void moveLineUp(){
         if (e.cy) e.cy--;
         else e.rowoff --;
     }
+}
+
+void quit(int* quit_attempts, int number_of_modifications, struct string* message) {
+
+  if (!*quit_attempts && number_of_modifications){
+      char pop_up[] = "Warning ! File has unsaved changes. ";
+      writeMessage(message, pop_up, strlen(pop_up));
+      (*quit_attempts)++ ;
+      return;
+  }
+
+  write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
+  write(STDOUT_FILENO , "\x1b[H" ,3);
+  
+  exit(0);
+
 }

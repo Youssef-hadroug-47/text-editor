@@ -49,8 +49,6 @@ int createEvent(const char* entryBuffer, int len) {
   if (!len) return -1;
   
   switch (entryBuffer[0]) {
-    case ESCAPE:
-      break;
     case TAB:
     case BACKSPACE1:
     case BACKSPACE2:
@@ -58,68 +56,66 @@ int createEvent(const char* entryBuffer, int len) {
     case SAVE:
     case QUIT:
       return entryBuffer[0];
-    default: 
-      return CTRL_KEY(entryBuffer[0]) ? CHARACTER : -1;
-  }
-
-  if (entryBuffer[1] == '['){
-      switch (entryBuffer[2]){
-        case UP_ARROW:
-          return UP_ARROW;
-        case DOWN_ARROW:
-          return DOWN_ARROW;
-        case RIGHT_ARROW:
-          return RIGHT_ARROW;
-        case LEFT_ARROW:
-          return LEFT_ARROW;
-        case '1':
-          if (entryBuffer[3] == ';' && entryBuffer[4] == '5'){
-            switch (entryBuffer[5]){
-              case LEFT_ARROW :
-                return CTRL_LEFT_ARROW;
-              case RIGHT_ARROW :
-                return CTRL_RIGHT_ARROW;
-              case UP_ARROW :
-              case DOWN_ARROW :
-                return -1;
-            }
+  
+    case ESCAPE:
+      if (len == 1) return ESCAPE;
+      switch(entryBuffer[1]){
+        case DOLLAR_SIGN: return ALT_DOLLAR_SIGN;
+        case ZERO: return ALT_ZERO;
+        case  '[':
+          switch (entryBuffer[2]){
+            case UP_ARROW:
+              return UP_ARROW;
+            case DOWN_ARROW:
+              return DOWN_ARROW;
+            case RIGHT_ARROW:
+              return RIGHT_ARROW;
+            case LEFT_ARROW:
+              return LEFT_ARROW;
+            case '1':
+              if (entryBuffer[3] == ';' && entryBuffer[4] == '5'){
+                switch (entryBuffer[5]){
+                  case LEFT_ARROW :
+                    return CTRL_LEFT_ARROW;
+                  case RIGHT_ARROW :
+                    return CTRL_RIGHT_ARROW;
+                  case UP_ARROW :
+                  case DOWN_ARROW :
+                    return -1;
+                }
+              }
+              else if (entryBuffer[3] == ';' && entryBuffer[4] == '3'){
+                switch (entryBuffer[5]){
+                  case LEFT_ARROW :
+                  case RIGHT_ARROW :
+                    return -1;
+                  case UP_ARROW :
+                    return ALT_ARROW_UP;
+                  case DOWN_ARROW :
+                    return ALT_ARROW_DOWN;
+                }
+              }
+              break;
           }
-          else if (entryBuffer[3] == ';' && entryBuffer[4] == '3'){
-            switch (entryBuffer[5]){
-              case LEFT_ARROW :
-              case RIGHT_ARROW :
-                return -1;
-              case UP_ARROW :
-                return ALT_ARROW_UP;
-              case DOWN_ARROW :
-                return ALT_ARROW_DOWN;
-            }
-          }
-          break;
       }
+      break;
+    default:
+      if (utf8_len(entryBuffer[0]) != len) { log_message(logger, "invalid utf character", strlen("invalid utf character"), ERROR); return -1;} 
+      return !iscntrl(entryBuffer[0]) ? CHARACTER : -1 ;
   }
   return -1;
 }
 
-int handleKeys(const char* buff, const int len) {
+int handleKeys(enum editorKey key, const char* buff, const int len) {
 
     if (!len) return 0;  
+    if (key == -1) return -1;
 
-    if (buff[0] != CTRL_KEY('q')) e.quit_attempts = 0;
-    switch (buff[0]){
+    if (key != QUIT) e.quit_attempts = 0;
+    switch (key){
         case QUIT:
-            if (e.quit_attempts == 0 && e.modification_num){
-                char pop_up[] = "Warning ! File has unsaved changes. ";
-                writeMessage(&e.message, pop_up, strlen(pop_up));
-                e.quit_attempts ++ ;
-                break;
-            }
-
-            write(STDOUT_FILENO ,"\x1b[2J\x1b[3J" ,8);
-            write(STDOUT_FILENO , "\x1b[H" ,3);
-            
-            exit(0);
-        
+          quit(&e.quit_attempts, e.modification_num, &e.message);
+          break;
         case TAB :
             tab();
             break;
@@ -153,68 +149,43 @@ int handleKeys(const char* buff, const int len) {
         case BACKSPACE1:
             backspace(); 
             break;
-        
-        case ESCAPE :{
-            switch(buff[1]){
-              case '[':
-                switch (buff[2]){
-                  case UP_ARROW:
-                    upArrow();
-                    break;
-                  case DOWN_ARROW:
-                    downArrow(); 
-                    break;
-                  case RIGHT_ARROW:
-                    rightArrow();
-                    break;
-                  case LEFT_ARROW:
-                    leftArrow();     
-                    break;
-                  case '1':
-                    if (buff[3] == ';' && buff[4] == '5'){
-                      switch (buff[5]){
-                        case LEFT_ARROW :
-                          gotoPrevWord();
-                          break;
-                        case RIGHT_ARROW :
-                          gotoNextWord();
-                          break;
-                        case UP_ARROW :
-                          break;
-                        case DOWN_ARROW :
-                          break;
-                      }
-                    }
-                    else if (buff[3] == ';' && buff[4] == '3'){
-                      switch (buff[5]){
-                        case LEFT_ARROW :
-                        case RIGHT_ARROW :
-                          break;
-                        case UP_ARROW :
-                          moveLineUp();
-                          break;
-                        case DOWN_ARROW :
-                          moveLineDown();
-                          break;
-                      }
-                    }
-                    break;
-                }
-                break;
-              case DOLLAR_SIGN:
-                  dollarSign();
-                  break;
-              case ZERO:
-                  e.cx = 0;
-                  e.coloff = 0;
-                  break;
-            }
+        case UP_ARROW:
+            upArrow();
             break;
-        }
-        default :{
+        case DOWN_ARROW:
+            downArrow();
+            break;
+        case RIGHT_ARROW:
+            rightArrow();
+            break;
+        case LEFT_ARROW:
+            leftArrow();
+            break;
+        case CTRL_LEFT_ARROW:
+            gotoPrevWord();
+            break;
+        case CTRL_RIGHT_ARROW:
+            gotoNextWord();
+            break;
+        case ALT_ARROW_DOWN:
+            moveLineDown();
+            break;
+        case ALT_ARROW_UP:
+            moveLineUp();
+            break;
+        case ALT_DOLLAR_SIGN:
+            gotoEndOfLine();
+            break;
+        case ALT_ZERO:
+            gotoBeginningOfLine();
+            break;
+        case CHARACTER :
             character((char*)buff, len);
-
-        }
+            break;
+        case ESCAPE:
+            break;
+        default:
+            return -1;
     }
     return 0;
 }
@@ -259,10 +230,10 @@ void enableRawMode(){
     if (tcsetattr(STDIN_FILENO,TCSAFLUSH,&raw) == -1) die("tcsetattr");
 }
 void resetAtExit(struct string* command , int prevStartingX){
-        e.cx= 0;
-        e.cy =0;
-        stringFree(command);
-        e.startingX = prevStartingX;
+  e.cx= 0;
+  e.cy =0;
+  stringFree(command);
+  e.startingX = prevStartingX;
 }
 struct string editorPrompt(char* prompt){
   int promptLen = strlen(prompt);

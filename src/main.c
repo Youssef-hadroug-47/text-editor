@@ -44,13 +44,13 @@ int main (int argc ,char* argv[]){
     }
     logger = fopen(LOG_FILE_PATH, "a+");
 
-    int len = 0;
-
+    int buff_len = 0;
+    enum editorKey eventCode;
     refreshScreen();
     
     struct string better_buff;
     while (1){
-      len = 0;
+      buff_len = 0;
       char buff[8];
       char* event;
       size_t event_len;
@@ -59,10 +59,11 @@ int main (int argc ,char* argv[]){
       // dispatch service
       // log event with status code
       
-      if (!readKey(buff, &len)) continue;
-      get_editor_key_name(createEvent(buff, len), &event, &event_len);
+      if (readKey(buff, &buff_len) == -1) continue;
+      eventCode = createEvent(buff, buff_len);
+      get_editor_key_name(eventCode, &event, &event_len);
       log_message(logger, event, event_len, INFO);
-      handleKeys(buff, len);
+      if (handleKeys(eventCode, buff, buff_len) == -1) continue;
       refreshScreen();
     }
     return 0;

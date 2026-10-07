@@ -21,6 +21,7 @@
 /// structures ///
 
 #define CTRL_KEY(k) ((k)-'a'+1)
+
 struct string{
     char* b;
     int len;
@@ -70,6 +71,8 @@ enum editorKey {
     CTRL_LEFT_ARROW = 2004,
     ALT_ARROW_UP = 1001,
     ALT_ARROW_DOWN = 1002,
+    ALT_ZERO = 1000 + '0',
+    ALT_DOLLAR_SIGN = 1000 + '$',
     LEFT_ARROW = 'D', 
     RIGHT_ARROW = 'C',
     UP_ARROW = 'A',
@@ -91,7 +94,7 @@ int log_message (FILE* log, char* message, int len, enum messageType messagetype
 
 
 /// Terminal ///
-int handleKeys(const char* buff, const int len);
+int handleKeys(enum editorKey key, const char* buff, const int len);
 void enableRawMode();
 void disableRawMode();
 void die(const char* s);
@@ -130,6 +133,7 @@ void saveToDisk();
 void insertNewLine();
 
 /// KeyBinding ///
+void quit(int* quit_attempts, int number_of_modifications, struct string* message);
 void leftArrow();
 void rightArrow();
 void upArrow();
@@ -137,7 +141,8 @@ void downArrow();
 void backspace();
 void enter();
 void character(char* input , int inputLength);
-void dollarSign();
+void gotoEndOfLine();
+void gotoBeginningOfLine();
 void tab();
 void gotoPrevWord();
 void gotoNextWord();
