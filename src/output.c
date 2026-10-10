@@ -17,11 +17,11 @@ void refreshScreen(){
 
     time_t current_time;
     time(&current_time);
-    if ((int)current_time - e.messageTime >= e.messageWait ) 
-        clearString(&e.message);
+    if ((int)current_time - Flash_Message.messageTime >= Flash_Message.messageWait ) 
+        clearString(&Flash_Message.message);
 
-    if (e.message.len) drawMessage(&ab,e.message);
-    if (e.message.len > e.windowsWidth) e.windowsLength--;
+    if (Flash_Message.message.len) drawMessage(&ab, Flash_Message.message);
+    if (Flash_Message.message.len > e.windowsWidth) e.windowsLength--;
 
     char ch[100];
     int len = snprintf(ch,sizeof(ch), "\x1b[%d;%dH",(e.cy)+1 ,(e.cx)+1+e.startingX);
@@ -121,29 +121,36 @@ void drawRows(struct string *ab){
             }
         }
         else {
-            int len = (e.rowBuff+i)->lenByte - getPos(
-                    e.coloff , (e.rowBuff+i)->b );
+            int len = (e.rowBuff+i)->lenByte - getPosInBytes(e.coloff , (e.rowBuff+i)->b, (e.rowBuff+i)->lenByte );
             if (len < 0) len =0;
-            if (e.rowBuff[i].len - e.coloff > e.windowsWidth) len = getPos( e.windowsWidth , (e.rowBuff+i)->b );
+            if (e.rowBuff[i].len - e.coloff > e.windowsWidth) len = getPosInBytes( e.windowsWidth , (e.rowBuff+i)->b, (e.rowBuff+i)->len );
             stringAppend(ab, (e.rowBuff+i)->b+e.coloff  , len);
         }
         stringAppend(ab ,"\r\n" ,2);
     }
 }
-void drawMessage(struct string *ab, struct string message){
-    const char* color = "\e[38;5;214m";
-    const char* reset = "\e[0m";
-    stringAppend(ab, color, strlen(color));
+void drawMessage (struct string *ab, struct string message){
+    enum color COLOR = !Flash_Message.color ? COLOR_YELLOW : Flash_Message.color; 
+    stringAppend(ab, color_to_ansi(COLOR), strlen(color_to_ansi(COLOR)));
     stringAppend(ab, message.b, message.lenByte);
-    stringAppend(ab, reset, strlen(reset));
+    stringAppend(ab, ANSI_RESET, strlen(ANSI_RESET));
 }
-void writeMessage(struct string *destination , char* message , int len){
-    destination->b = realloc (destination->b,len+1);
-    memcpy(destination->b ,message , len+1);
-    destination->lenByte = len;
-    destination->len = getPos(len , message );
+
+void writeMessage (char* message , int len) {
+    Flash_Message.message.b = realloc (Flash_Message.message.b,len+1);
+    memcpy(Flash_Message.message.b ,message , len+1);
+    Flash_Message.message.lenByte = len;
+    Flash_Message.message.b = realloc (Flash_Message.message.b,len+1);
+    memcpy(Flash_Message.message.b ,message , len+1);
+    Flash_Message.message.len = getLen(len , message );
    
     time_t current_time;
     time(&current_time);
-    e.messageTime = (int)current_time ;
+    Flash_Message.messageTime = (int)current_time ;
+}
+
+static const char *const color_codes[COLOR_COUNT] = { COLOR_LIST(AS_CODE) };
+
+const char *color_to_ansi(enum color c) {
+    return (c >= 0 && c < COLOR_COUNT) ? color_codes[c] : ANSI_RESET;
 }

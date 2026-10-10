@@ -7,6 +7,7 @@ int log_message (FILE* log, char* message, int len, enum messageType type) {
   if (!log || !message || !len )
     return -1;
   
+  
   char messageType;
   switch (type) {
     case WARNING:

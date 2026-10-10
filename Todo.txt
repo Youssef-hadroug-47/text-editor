@@ -1,2 +1,3 @@
 - add copy and paste
 - add UTF-8 support 
+- bug in the nextWord logic

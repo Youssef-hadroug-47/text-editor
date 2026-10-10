@@ -1,20 +1,44 @@
 #include "utilities.h"
 
-int readKey(char* buff, int* len){
+int readKey(char *buf, size_t cap, int *len) {
+    unsigned char c;
     *len = 0;
-    int readStatus;
-    char c;
-    while ((readStatus = read(STDIN_FILENO, &c, sizeof(char))) == 1) {
-      char code[4];
-      int code_len = snprintf(code, sizeof(code), "%d", c);
-      log_message(logger, code, code_len, INFO);
-      if (sizeof(buff) < *len) return -1;
-      memcpy(buff + *len, &c, 1);
-      (*len)++;
+
+    int n = read(STDIN_FILENO, &c, 1);
+    if (n == 0) return -1;                       // timeout, no input
+    if (n < 0) return (errno == EAGAIN) ? 0 : -1;
+    log_message(logger, &c, 1, INFO);
+
+    buf[(*len)++] = c;
+
+    if (c == 0x1b) {                            // escape sequence
+        unsigned char next;
+        // VTIME timeout makes a lone ESC distinguishable
+        if (read(STDIN_FILENO, &next, 1) != 1) return 1;   // plain ESC
+        log_message(logger, buf+*len, 1, 1);
+        buf[(*len)++] = next;
+        if (next == '[' || next == 'O') {
+            while (*len < (int)cap) {
+                if (read(STDIN_FILENO, &next, 1) != 1) break;
+                log_message(logger, buf+*len, 1, 1);
+                buf[(*len)++] = next;
+                if (next >= 0x40 && next <= 0x7e) break;   // CSI final byte
+            }
+        }
+        return 1;
     }
 
-    if (readStatus == -1 && errno != EAGAIN) return -1;
-    return *len > 0 ? 1 : -1;
+    int extra = 0;                              // UTF-8
+    if      ((c & 0xE0) == 0xC0) extra = 1;
+    else if ((c & 0xF0) == 0xE0) extra = 2;
+    else if ((c & 0xF8) == 0xF0) extra = 3;
+
+    while (extra-- > 0 && *len < (int)cap) {
+        if (read(STDIN_FILENO, &c, 1) != 1) break;
+        log_message(logger, buf+*len, 1, 1);
+        buf[(*len)++] = c;
+    }
+    return 1;
 }
 void pathToFileName(char* path){
     int i = strlen(path);
@@ -26,7 +50,8 @@ void pathToFileName(char* path){
     memcpy(e.filename, path+i , strlen(path)-i);
     e.filename[strlen(path)-i]= '\0';
 }
-void readFile(char* file){
+void readFile(char* file) {
+    log_message(logger, file, strlen(file), INFO);
     FILE* File = fopen(file,"r");
     if (File == NULL){
         die("fopen");

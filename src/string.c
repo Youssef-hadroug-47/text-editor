@@ -13,7 +13,7 @@ void clearString(struct string *ab){
 }
 void stringAppend(struct string *ab , const char* c , int lenByte){
     ab->b = realloc(ab->b, ab->lenByte + lenByte + 1);
-    int pos = getPos(lenByte , (char*)c );
+    int pos = getLen(lenByte , (char*)c );
     memcpy(ab->b + ab->lenByte , c, lenByte);
     ab->lenByte += lenByte;
     ab->len += pos;

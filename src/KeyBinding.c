@@ -1,11 +1,12 @@
 #include "utilities.h"
+#include <stdio.h>
 
 
 // Helper method
 void moveCursorToIndex(int idx){
-    if (idx > e.cx+e.coloff){
-        if (idx -(e.cx+e.coloff) < e.windowsWidth - e.cx){
-            e.cx +=idx - (e.cx+e.coloff);
+    if (idx > e.cx+e.coloff) {
+        if (idx - (e.cx+e.coloff) < e.windowsWidth - e.cx){
+            e.cx += idx - (e.cx+e.coloff);
         }
         else {
             e.cx = e.windowsWidth-1;
@@ -23,11 +24,11 @@ void moveCursorToIndex(int idx){
 
     }
 }
-int nextSpace(char* string , int at){
-    int lenInByte = strlen(string);
-    int len = getPos(lenInByte,string);
 
-    if (at >= len -1) return -1;
+int nextSpace(char* string, int len, int at){
+    int lenInByte = strlen(string);
+
+    if (at >= len-1) return -1;
     at++;
     int i = at;
     while(i < len && string[i] == ' '){i++;}
@@ -35,9 +36,8 @@ int nextSpace(char* string , int at){
     while(i < len && string[i] != ' '){i++;}
     return --i;
 }
-int prevSpace(char* string , int at){
+int prevSpace(char* string, int len, int at){
     int lenInByte = strlen(string);
-    int len = getPos(lenInByte,string);
 
     if (at == 0) return -1;
     at--;
@@ -57,8 +57,8 @@ void upArrow(){
     if(row > 0 && row -1 < e.rowsNum &&
             ( e.cx+e.coloff >= e.rowBuff[row].len  ||  e.cx+e.coloff > e.rowBuff[row-1].len ) ) 
         moveCursorToIndex(e.rowBuff[row-1].len); 
-    if (e.cy) e.cy--; 
-    else if(e.rowoff) e.rowoff--;
+    if (e.cy > 0) e.cy--; 
+    else if(e.rowoff > 0) e.rowoff--;
 }
 void downArrow(){
     int row = e.cy+e.rowoff;
@@ -73,24 +73,24 @@ void downArrow(){
     else e.rowoff++;
 }
 void rightArrow(){
-    if(e.cy+e.rowoff<e.rowsNum  && e.cx + e.coloff== e.rowBuff[e.cy+e.rowoff].len) {
-        //if (e.cc != e.windowsLength -1) e.cy++;
-        //else e.rowoff++;
-        //e.cx=0;
-        //e.coloff=0;
+    if (e.cy + e.rowoff >= e.rowsNum) return;
+    if(e.cx + e.coloff == e.rowBuff[e.cy+e.rowoff].len) {
+        if (e.cy < e.windowsLength -1) e.cy++;
+        else e.rowoff++;
+        e.cx=0;
+        e.coloff=0;
     }
     else
-    if(e.cx != e.windowsWidth -1) e.cx++;
-    else e.coloff++;
+      (e.cx < e.windowsWidth -1) ? e.cx++ : e.coloff++;
 }
 void leftArrow(){
-    if (e.cx != 0) e.cx--;
+    if (e.cx > 0) e.cx--;
     else {
-        if (e.coloff) e.coloff--;
+        if (e.coloff > 0) e.coloff--;
         else if(e.cy+e.rowoff < e.rowsNum && e.cy+e.rowoff != 0){
-                //if (e.cy) e.cy--;
-                //else e.rowoff--;
-                //dollarSign(); 
+                if (e.cy > 0) e.cy--;
+                else e.rowoff--;
+                gotoEndOfLine(); 
         }
     }
 }
@@ -137,17 +137,17 @@ void gotoBeginningOfLine() {
 
 void gotoEndOfLine(){
     if (e.rowBuff == NULL) return;
-    int len= e.rowBuff[e.cy+e.rowoff].len ;
-    if(len > e.windowsWidth) {
-        e.coloff = len - e.windowsLength;
-    }
-    e.cx= len ;
+    int currentLineLen = e.rowBuff[e.cy+e.rowoff].len - 1;
+    moveCursorToIndex(currentLineLen > 0 ? currentLineLen : 0);
 }
 
-void gotoNextWord(){
-    if (e.rowBuff == NULL) return; 
+void gotoNextWord() {
+    if (e.rowBuff == NULL || e.cy+e.rowoff >= e.rowsNum) return;
     int at = e.cx+e.coloff;
-    int nextWord = nextSpace(e.rowBuff[e.cy+e.rowoff].b, at);
+    
+    int nextWord = nextSpace(e.rowBuff[e.cy+e.rowoff].b, e.rowBuff[e.cy+e.rowoff].len, at);
+    int next = -100;
+
     if (nextWord == -1){
         if(e.cy < e.windowsLength-1 && e.cy < e.rowsNum-1) e.cy++;
         else if(e.cy+e.rowoff < e.rowsNum -1 ) e.rowoff++;
@@ -155,26 +155,32 @@ void gotoNextWord(){
 
         e.coloff=0;
         
-        int next = nextSpace(e.rowBuff[e.cy+e.rowoff].b, 0);
+        next = nextSpace(e.rowBuff[e.cy+e.rowoff].b, e.rowBuff[e.cy+e.rowoff].len, 0);
         if (next == -1)
             moveCursorToIndex(0);
-        moveCursorToIndex(next);
+        else
+          moveCursorToIndex(next);
     }
     else
         moveCursorToIndex(nextWord);
- 
+
 }
 void gotoPrevWord(){
-    if (e.rowBuff == NULL) return;
-    int prevWord = prevSpace(e.rowBuff[e.cy+e.rowoff].b , e.cx+e.coloff);
-    if (prevWord == -1){
-        if (e.cy) e.cy--;
-        else if(e.rowoff) e.rowoff--;
+    if (e.rowBuff == NULL || e.cy + e.rowoff >= e.rowsNum) return;
+    int prevWord = prevSpace(e.rowBuff[e.cy+e.rowoff].b, e.rowBuff[e.cy+e.rowoff].len, e.cx+e.coloff);
+    if (prevWord == -1) {
+        if (e.cy > 0) e.cy--;
+        else if(e.rowoff > 0) e.rowoff--;
         else return;
 
-        int prev = prevSpace(e.rowBuff[e.cy+e.rowoff].b, e.rowBuff[e.cy+e.rowoff].len);
-        if (prev == -1) e.cx = 0;
-        else moveCursorToIndex(prev);
+        int prev = prevSpace(e.rowBuff[e.cy+e.rowoff].b, e.rowBuff[e.cy+e.rowoff].len, e.rowBuff[e.cy+e.rowoff].len);
+    char prev_string[32];
+    size_t prev_string_len;
+    prev_string_len = snprintf(prev_string, sizeof(prev_string), "%d", prev);
+    if (prev_string_len > 0) log_message(logger, prev_string, prev_string_len, ERROR);
+        (prev == -1) ? 
+          moveCursorToIndex(0) :
+          moveCursorToIndex(prev);
     }
     else
         moveCursorToIndex(prevWord);
@@ -205,11 +211,11 @@ void moveLineUp(){
     }
 }
 
-void quit(int* quit_attempts, int number_of_modifications, struct string* message) {
+void quit (int* quit_attempts, int number_of_modifications) {
 
   if (!*quit_attempts && number_of_modifications){
       char pop_up[] = "Warning ! File has unsaved changes. ";
-      writeMessage(message, pop_up, strlen(pop_up));
+      writeMessage(pop_up, strlen(pop_up));
       (*quit_attempts)++ ;
       return;
   }

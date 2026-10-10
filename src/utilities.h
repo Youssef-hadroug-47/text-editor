@@ -22,6 +22,25 @@
 
 #define CTRL_KEY(k) ((k)-'a'+1)
 
+#define COLOR_LIST(X)            \
+    X(COLOR_BLACK,   "\x1b[30m") \
+    X(COLOR_RED,     "\x1b[31m") \
+    X(COLOR_GREEN,   "\x1b[32m") \
+    X(COLOR_YELLOW,  "\x1b[33m") \
+    X(COLOR_BLUE,    "\x1b[34m") \
+    X(COLOR_MAGENTA, "\x1b[35m") \
+    X(COLOR_CYAN,    "\x1b[36m") \
+    X(COLOR_WHITE,   "\x1b[37m")
+
+#define AS_ENUM(name, code) name,
+#define AS_CODE(name, code) [name] = code,
+#define ANSI_RESET "\x1b[0m"
+
+enum color { COLOR_LIST(AS_ENUM) COLOR_COUNT };
+const char *color_to_ansi(enum color c);
+
+
+
 struct string{
     char* b;
     int len;
@@ -30,11 +49,12 @@ struct string{
 
 
 enum messageType {
-  WARNING = 1,
-  INFO = 2,
-  ERROR = 3,
-  SUCCESS = 4
+  WARNING,
+  INFO,
+  ERROR,
+  SUCCESS
 };
+
 
 extern FILE* logger; 
 struct editorConfig {
@@ -58,11 +78,16 @@ struct editorConfig {
     
     struct string startOfLineChar;
 
-    struct string message;
-    int messageTime ;
-    int messageWait ;
     int quit_attempts;
 };
+
+struct FLASH_MESSAGE {
+  enum color color;
+  struct string message;
+  int messageTime ;
+  int messageWait ;
+};
+extern struct FLASH_MESSAGE Flash_Message;
 
 enum editorKey {
 
@@ -84,6 +109,7 @@ enum editorKey {
     ENTER = 13,
     QUIT = CTRL_KEY('q'),
     SAVE = CTRL_KEY('s'),
+    CTRL_C = CTRL_KEY('c'),
     ESCAPE = 27,
     TAB = 9
 };
@@ -94,6 +120,7 @@ int log_message (FILE* log, char* message, int len, enum messageType messagetype
 
 
 /// Terminal ///
+void get_editor_key_name(enum editorKey key, char **out_str, size_t *out_len);
 int handleKeys(enum editorKey key, const char* buff, const int len);
 void enableRawMode();
 void disableRawMode();
@@ -109,10 +136,10 @@ void refreshScreen();
 void drawRows(struct string *ab);
 void drawStatusLine(struct string *ab);
 void drawMessage(struct string *ab , struct string message);
-void writeMessage(struct string *destination , char* message , int len);
+void writeMessage(char* message , int len);
 void drawEditorName(struct string *ab);
 /// Input ///
-int readKey(char* buff, int* len);
+int readKey(char* buff, size_t cap, int* len);
 void pathToFileName(char* path);
 void readFile(char* file);
 
@@ -123,7 +150,7 @@ void stringAppend(struct string *ab , const char* c , int len);
 void stringFree(struct string *ab);
 
 /// editing ////
-int getPos(int at , char* input );
+int getLen(int at , char* input );
 int getPosInBytes(int at , char* input , int len);
 void insertCharInRow(struct string* ab ,int at ,char* input , int inputLength);
 void insertChar(char* input , int inputLength);
@@ -133,7 +160,7 @@ void saveToDisk();
 void insertNewLine();
 
 /// KeyBinding ///
-void quit(int* quit_attempts, int number_of_modifications, struct string* message);
+void quit(int* quit_attempts, int number_of_modifications);
 void leftArrow();
 void rightArrow();
 void upArrow();
@@ -148,4 +175,5 @@ void gotoPrevWord();
 void gotoNextWord();
 void moveLineUp();
 void moveLineDown();
+
 #endif
